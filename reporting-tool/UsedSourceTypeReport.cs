@@ -28,7 +28,7 @@ namespace reporting_tool
                 .ListUsers(search: "profile.SourceType pr")
                 .Select(u => u.Profile["SourceType"].ToString())
                 .Distinct()
-                .ForEachAsync(uid => Console.WriteLine(uid));
+                .ForEach(uid => Console.WriteLine(uid));
         }
     }
 }
