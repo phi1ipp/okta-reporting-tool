@@ -21,20 +21,23 @@ namespace reporting_tool
 
         public void Run()
         {
-            var uids = File.ReadLines(_fileInfo.FullName).Select(line => line.Trim()).ToList();
-
             var oktaClient = new OktaClient(new OktaClientConfiguration
             {
                 OktaDomain = _oktaConfig.Domain,
                 Token = _oktaConfig.ApiKey
             });
 
-            var logs = oktaClient.Logs.GetLogs(filter: "eventType eq \"user.lifecycle.create\"", limit: 1000);
-
-            logs
-                .Where(ev => uids.Intersect(ev.Target.Select(tgt => tgt.Id)).Any())
-                .Select(ev => ev.Target.Select(tgt => tgt.Id).First() + " " + ev.Actor.Id)
-                .ForEachAsync(str => Console.WriteLine(str));
+            foreach (var s in File.ReadLines(_fileInfo.FullName)
+                .Select(line => line.Trim())
+                .Select(uid => oktaClient.Logs.GetLogs(
+                        filter: $"eventType eq \"user.lifecycle.create\" and target.id eq \"{uid}\"",
+                        since: DateTime.Now.Add(TimeSpan.FromDays(-180d)).ToString("yyyy-MM-dd"))
+                    .Select(ev => ev.Target.First().Id + " " + ev.Actor.AlternateId)
+                    .First().Result
+                ))
+            {
+                Console.WriteLine(s);
+            }
         }
     }
 }
