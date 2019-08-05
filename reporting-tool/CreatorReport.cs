@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
@@ -27,17 +28,26 @@ namespace reporting_tool
                 Token = _oktaConfig.ApiKey
             });
 
-            foreach (var s in File.ReadLines(_fileInfo.FullName)
-                .Select(line => line.Trim())
-                .Select(uid => oktaClient.Logs.GetLogs(
+            var enumerator = File.ReadLines(_fileInfo.FullName).Select(line => line.Trim().Split(' ').First()).GetEnumerator();
+            for (int i = 1; enumerator.MoveNext(); i++)
+            {
+                var uid = enumerator.Current;
+                
+                var res = oktaClient.Logs.GetLogs(
                         filter: $"eventType eq \"user.lifecycle.create\" and target.id eq \"{uid}\"",
                         since: DateTime.Now.Add(TimeSpan.FromDays(-180d)).ToString("yyyy-MM-dd"))
-                    .Select(ev => ev.Target.First().Id + " " + ev.Actor.AlternateId)
-                    .First().Result
-                ))
-            {
-                Console.WriteLine(s);
+                    .Select(ev => ev.Target.First().Id + " " + ev.Actor.AlternateId + " " + ev.Actor.Id)
+                    .First().Result;
+
+                Console.WriteLine(res);
+
+
+                if (i % 40 != 0) continue;
+                
+                Console.WriteLine("Pausing...");
+                Thread.Sleep(80 * 1000);
             }
+            enumerator.Dispose();
         }
     }
 }

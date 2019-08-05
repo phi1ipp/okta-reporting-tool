@@ -11,11 +11,13 @@ namespace reporting_tool
     {
         private OktaConfig _oktaConfig;
         private string _attrName;
+        private readonly DateTime _since;
 
-        public EmptyAttributeReport(OktaConfig config, string attrName)
+        public EmptyAttributeReport(OktaConfig config, string attrName, string since = null)
         {
             _oktaConfig = config;
             _attrName = attrName;
+            _since = since == null ? DateTime.Parse("1990-01-01") : DateTime.Parse(since);
         }
 
         public void Run()
@@ -27,8 +29,8 @@ namespace reporting_tool
             });
 
             oktaClient.Users
-                .ListUsers()
-                .Where(u => u.Profile[_attrName] == null)
+                .ListUsers(search: $"created gt \"{_since:yyyy-MM-ddT00:00:00.000Z}\"")
+                .Where(u => string.IsNullOrEmpty(u.Profile[_attrName]?.ToString()) )
                 .Select(u =>
                     u.Id + " " +
                     string.Join(",",
@@ -36,7 +38,8 @@ namespace reporting_tool
                             .ListUserGroups(u.Id)
                             .Select(gr => gr.Profile.Name)
                             .ToList().Result))
-                .ForEachAsync(line => Console.WriteLine(line));
+                .ForEachAsync(line => Console.WriteLine(line))
+                .Wait();
         }
     }
 }

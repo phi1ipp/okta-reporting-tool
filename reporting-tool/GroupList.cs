@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class UsedSourceTypeReport
+    public class GroupList
     {
         private OktaConfig _oktaConfig;
 
-        public UsedSourceTypeReport(OktaConfig config)
+        public GroupList(OktaConfig config)
         {
             _oktaConfig = config;
         }
@@ -24,11 +26,10 @@ namespace reporting_tool
                 Token = _oktaConfig.ApiKey
             });
 
-            oktaClient.Users
-                .ListUsers(search: "profile.SourceType pr")
-                .Select(u => u.Profile["SourceType"].ToString())
-                .Distinct()
-                .ForEach(uid => Console.WriteLine(uid));
+            oktaClient.Groups.ListGroups().ForEach(grp =>
+            {
+                Console.WriteLine($"uuid: {grp.Id} name: {grp.Profile.Name}");
+            });
         }
     }
 }

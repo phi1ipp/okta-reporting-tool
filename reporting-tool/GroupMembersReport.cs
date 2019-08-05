@@ -10,8 +10,8 @@ namespace reporting_tool
 {
     public class GroupMembersReport
     {
-        private OktaConfig _oktaConfig;
-        private string _grpName;
+        private readonly OktaConfig _oktaConfig;
+        private readonly string _grpName;
 
         public GroupMembersReport(OktaConfig config, string grpName)
         {

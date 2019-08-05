@@ -13,7 +13,7 @@ namespace reporting_tool
         private OktaConfig _oktaConfig;
         private FileInfo _fileInfo;
         private string _attrName;
-        
+
         public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName)
         {
             _oktaConfig = config;
@@ -25,25 +25,33 @@ namespace reporting_tool
         {
             // produce map of uid -> attrValue
             var uidToValue = File.ReadLines(_fileInfo.FullName)
-                .Select(line => new List<string>(line.Split(",")))
+                .Select(line => new List<string>(line.Trim().Split(',', ' ')))
                 .ToDictionary(lst => lst.First(), lst => lst.Last());
-            
+
             var oktaClient = new OktaClient(new OktaClientConfiguration
             {
                 OktaDomain = _oktaConfig.Domain,
                 Token = _oktaConfig.ApiKey
             });
-            
-            // for each user set its profile[attr] = val
-            foreach (var (uid, val) in uidToValue)
+
+            uidToValue.AsParallel().ForAll(pair =>
             {
-                var oktaUser = oktaClient.Users.GetUserAsync(uid).Result;
-                oktaUser.Profile[_attrName] = val;
-                
-                Console.WriteLine($"Updating user ${uid}: set attribute {_attrName} to {val}");
-                
-                oktaUser.UpdateAsync();
-            }
+                var oktaUser = oktaClient.Users.GetUserAsync(pair.Key).Result;
+                oktaUser.Profile[_attrName] = pair.Value;
+
+                try
+                {
+                    var updatedUser = oktaUser.UpdateAsync().Result;
+
+                    Console.WriteLine($"Updating user {pair.Key}: set attribute {_attrName} to {pair.Value} - success");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(
+                        $"Updating user {pair.Key}: set attribute {_attrName} to {pair.Value} - update failed " +
+                        $"({e.Message})");
+                }
+            });
         }
     }
 }

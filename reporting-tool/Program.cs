@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.DragonFruit;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Linq;
 
 namespace reporting_tool
 {
@@ -16,9 +13,16 @@ namespace reporting_tool
 
             var root = new RootCommand();
 
-            root.AddCommand(new Command("usedSourceType",
-                handler: CommandHandler.Create(() => { new UsedSourceTypeReport(oktaConfig).Run(); })));
-
+            var optionAttrs = new Option("--attrs", "attributes to output", new Argument<string>());
+            var optionInputFile = new Option("--input", "input file name", new Argument<FileInfo>());
+            
+            var command = new Command("usedAttributeValues",
+                handler: CommandHandler.Create<string>((attrName) =>
+                {
+                    new UsedAttributeValues(oktaConfig, attrName).Run();
+                }));
+            command.AddOption(new Option("--attrName", "profile attribute name to check", new Argument<string>()));
+            root.AddCommand(command);
 
             var aCommand = new Command("findCreator",
                 handler: CommandHandler.Create<FileInfo>((input) => { new CreatorReport(oktaConfig, input).Run(); }));
@@ -35,10 +39,12 @@ namespace reporting_tool
             root.AddCommand(bCommand);
 
 
-            var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string>(
-                (attrName) => { new EmptyAttributeReport(oktaConfig, attrName).Run(); }));
+            var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
+                (attrName, since) => { new EmptyAttributeReport(oktaConfig, attrName, since).Run(); }));
 
             cCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
+            cCommand.AddOption(new Option("--since", "select users created since specified date (YYYY-MM-DD format)",
+                new Argument<string>()));
             root.AddCommand(cCommand);
 
             var dCommand = new Command("groupMembership", handler: CommandHandler.Create<string>(
@@ -46,6 +52,29 @@ namespace reporting_tool
 
             dCommand.AddOption(new Option("--grpName", "group name to run report for", new Argument<string>()));
             root.AddCommand(dCommand);
+
+            var eCommand = new Command("listApps",
+                handler: CommandHandler.Create(() => { new ApplicationList(oktaConfig).Run(); }));
+            root.AddCommand(eCommand);
+
+            root.AddCommand(new Command("listGroups",
+                handler: CommandHandler.Create(() => { new GroupList(oktaConfig).Run(); })));
+            
+            var fCommand = new Command("userReport", handler: CommandHandler.Create<FileInfo, string>((input, attrs) =>
+            {
+                new UserReport(oktaConfig, input, attrs).Run();
+            }));
+            fCommand.AddOption(optionInputFile);
+            fCommand.AddOption(optionAttrs);
+            root.AddCommand(fCommand);
+            
+            var gCommand = new Command("userSearchReport", handler: CommandHandler.Create<string, string>((search, attrs) =>
+            {
+                new UserSearchReport(oktaConfig, search, attrs).Run();
+            }));
+            gCommand.AddOption(new Option("--search", "search expression", new Argument<string>()));
+            gCommand.AddOption(optionAttrs);
+            root.AddCommand(gCommand);
             
             root.InvokeAsync(args).Wait();
         }
