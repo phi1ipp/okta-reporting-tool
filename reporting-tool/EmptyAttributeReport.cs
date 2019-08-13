@@ -7,38 +7,49 @@ using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class EmptyAttributeReport
+    /// <inheritdoc />
+    /// <summary>
+    /// Class to run a report to discover users with an empty attribute
+    /// </summary>
+    public class EmptyAttributeReport : OktaAction
     {
         private OktaConfig _oktaConfig;
         private string _attrName;
         private readonly DateTime _since;
 
-        public EmptyAttributeReport(OktaConfig config, string attrName, string since = null)
+        /// <inheritdoc />
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="config">Okta Configuration object</param>
+        /// <param name="attrName">Attribute name to check against nullability</param>
+        /// <param name="since">Optional string representing a date of user creation since which to start inspection</param>
+        public EmptyAttributeReport(OktaConfig config, string attrName, string since = null) : base(config)
         {
             _oktaConfig = config;
             _attrName = attrName;
             _since = since == null ? DateTime.Parse("1990-01-01") : DateTime.Parse(since);
         }
 
+        /// <summary>
+        /// Report execution entry point
+        /// </summary>
         public void Run()
         {
-            var oktaClient = new OktaClient(new OktaClientConfiguration
-            {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
-
-            oktaClient.Users
+            OktaClient.Users
                 .ListUsers(search: $"created gt \"{_since:yyyy-MM-ddT00:00:00.000Z}\"")
-                .Where(u => string.IsNullOrEmpty(u.Profile[_attrName]?.ToString()) )
-                .Select(u =>
-                    u.Id + " " +
-                    string.Join(",",
-                        oktaClient.Users
+                .Where(u => string.IsNullOrEmpty(u.Profile[_attrName]?.ToString()))
+                .Select(async u =>
+                    {
+
+                        var lstGroups = await OktaClient.Users
                             .ListUserGroups(u.Id)
                             .Select(gr => gr.Profile.Name)
-                            .ToList().Result))
-                .ForEachAsync(line => Console.WriteLine(line))
+                            .ToList();
+                        
+                        return $"{u.Id} {string.Join(',', lstGroups)}";
+                    })
+                .ForEachAsync(async str => Console.WriteLine(await str))
                 .Wait();
         }
     }
