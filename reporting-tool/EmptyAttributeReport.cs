@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Okta.Sdk;
-using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
@@ -13,8 +9,7 @@ namespace reporting_tool
     /// </summary>
     public class EmptyAttributeReport : OktaAction
     {
-        private OktaConfig _oktaConfig;
-        private string _attrName;
+        private readonly string _attrName;
         private readonly DateTime _since;
 
         /// <inheritdoc />
@@ -26,7 +21,6 @@ namespace reporting_tool
         /// <param name="since">Optional string representing a date of user creation since which to start inspection</param>
         public EmptyAttributeReport(OktaConfig config, string attrName, string since = null) : base(config)
         {
-            _oktaConfig = config;
             _attrName = attrName;
             _since = since == null ? DateTime.Parse("1990-01-01") : DateTime.Parse(since);
         }
