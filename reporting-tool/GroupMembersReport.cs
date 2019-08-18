@@ -1,35 +1,37 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class GroupMembersReport
+    /// <summary>
+    /// Class to run a report on Okta group membership information
+    /// </summary>
+    public class GroupMembersReport : OktaAction
     {
         private readonly OktaConfig _oktaConfig;
         private readonly string _grpName;
 
-        public GroupMembersReport(OktaConfig config, string grpName)
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="config">Okta Config instance</param>
+        /// <param name="grpName">Group name</param>
+        public GroupMembersReport(OktaConfig config, string grpName) : base(config)
         {
             _oktaConfig = config;
             _grpName = grpName;
         }
 
-        public void Run()
+        /// <summary>
+        /// Report's main entry
+        /// </summary>
+        public override void Run()
         {
-            var oktaClient = new OktaClient(new OktaClientConfiguration
-            {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
-
-            var grpId = oktaClient.Groups.ListGroups(q: _grpName).Select(grp => grp.Id).First().Result;
+            var grpId = OktaClient.Groups.ListGroups(q: _grpName).Select(grp => grp.Id).First().Result;
             
-            var cnt = oktaClient.Groups
+            var cnt = OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Count(u => u.Profile["LOA"]?.ToString() == "3")
                 .Result;

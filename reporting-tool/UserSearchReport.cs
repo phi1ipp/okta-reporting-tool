@@ -1,49 +1,66 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using Okta.Sdk;
-using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class UserSearchReport
+    /// <inheritdoc />
+    /// <summary>
+    /// Class to run User report based on search
+    /// </summary>
+    public class UserSearchReport : OktaAction
     {
-        private OktaConfig _oktaConfig;
-        private string _search;
-        private ICollection<string> _attrs;
+        private readonly string _search;
+        private readonly ICollection<string> _attrs;
+        private readonly Func<IUser, bool> _filter;
 
-        public UserSearchReport(OktaConfig config, string search, string attrs)
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="config">Okta Config instance</param>
+        /// <param name="search">User search expression in Okta API language</param>
+        /// <param name="filter">User filter</param>
+        /// <param name="attrs">List of attributes to output for each user (CSV)</param>
+        public UserSearchReport(OktaConfig config, string search, string filter, string attrs) : base(config)
         {
-            _oktaConfig = config;
             _search = search;
 
             _attrs = attrs?.Split(",").ToHashSet();
+
+            _filter = new UserFilter(filter).F;
         }
 
-        public void Run()
+        /// <summary>
+        /// Report main entry
+        /// </summary>
+        public override void Run()
         {
-            var oktaClient = new OktaClient(new OktaClientConfiguration
-            {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
+            Console.WriteLine("id " +
+                              string.Join(" ",
+                                  _attrs.Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))) +
+                              " " +
+                              string.Join(" ",
+                                  _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))));
 
-            Console.WriteLine("id " + _attrs?.Aggregate((acc, attr) => acc + " " + attr));
+            var userBase = string.IsNullOrEmpty(_search)
+                ? OktaClient.Users.Where(user => _filter(user))
+                : OktaClient.Users.ListUsers(search: _search).Where(user => _filter(user));
             
-            oktaClient.Users.ListUsers(search: _search).ForEach(user =>
-            {
-                Console.Write(user.Id + " ");
-                foreach (var attr in _attrs)
+            userBase
+                .ForEachAsync(user =>
                 {
-                    Console.Write($"{user.Profile[attr]} ");
-                }
-                Console.WriteLine();
-            });
+                    Console.WriteLine($"{user.Id} " +
+                                      string.Join(" ",
+                                          _attrs
+                                              .Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))
+                                              .Select(user.GetNonProfileAttribute)) + " " +
+                                      string.Join(" ",
+                                          _attrs
+                                              .Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
+                                              .Select(attr => user.Profile[attr]?.ToString())));
+                })
+                .Wait();
         }
     }
 }

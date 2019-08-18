@@ -28,7 +28,7 @@ namespace reporting_tool
         /// <summary>
         /// Report execution entry point
         /// </summary>
-        public void Run()
+        public override void Run()
         {
             OktaClient.Users
                 .ListUsers(search: $"created gt \"{_since:yyyy-MM-ddT00:00:00.000Z}\"")

@@ -29,7 +29,7 @@ namespace reporting_tool
         /// <summary>
         /// Report's main entry
         /// </summary>
-        public void Run()
+        public override void Run()
         {
             Console.WriteLine("id " +
                               string.Join(" ",

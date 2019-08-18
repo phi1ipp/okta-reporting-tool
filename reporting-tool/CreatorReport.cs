@@ -25,7 +25,7 @@ namespace reporting_tool
         /// <summary>
         /// Main method to execute report
         /// </summary>
-        public void Run()
+        public override void Run()
         {
             File.ReadLines(_fileInfo.FullName)
                 .Select(line => line.Trim().Split(' ', ',').First())

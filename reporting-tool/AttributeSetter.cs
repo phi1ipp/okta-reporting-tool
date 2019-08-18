@@ -2,41 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Okta.Sdk;
-using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class AttributeSetter
+    /// <summary>
+    /// Class to run a process of setting Okta's attribute for users
+    /// </summary>
+    public class AttributeSetter : OktaAction
     {
-        private OktaConfig _oktaConfig;
         private FileInfo _fileInfo;
         private string _attrName;
 
-        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName)
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="config">Okta Config instance</param>
+        /// <param name="fileInfo">FileInfo to use as a source of records</param>
+        /// <param name="attrName">Attribute name to be set</param>
+        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName) : base(config)
         {
-            _oktaConfig = config;
             _fileInfo = fileInfo;
             _attrName = attrName;
         }
 
-        public void Run()
+        /// <summary>
+        /// Action's main entry
+        /// </summary>
+        public override void Run()
         {
             // produce map of uid -> attrValue
             var uidToValue = File.ReadLines(_fileInfo.FullName)
-                .Select(line => new List<string>(line.Trim().Split(',', ' ')))
-                .ToDictionary(lst => lst.First(), lst => lst.Last());
-
-            var oktaClient = new OktaClient(new OktaClientConfiguration
-            {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
+                .Select(line => new List<string>(line.Trim().Split(" ", 2)))
+                .ToDictionary(lst => lst.First(), lst => lst.Last().Replace("\"", ""));
 
             uidToValue.AsParallel().ForAll(pair =>
             {
-                var oktaUser = oktaClient.Users.GetUserAsync(pair.Key).Result;
+                var oktaUser = OktaClient.Users.GetUserAsync(pair.Key).Result;
                 oktaUser.Profile[_attrName] = pair.Value;
 
                 try
