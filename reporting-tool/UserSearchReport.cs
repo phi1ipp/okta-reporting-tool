@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Okta.Sdk;
 
@@ -11,8 +12,10 @@ namespace reporting_tool
     /// </summary>
     public class UserSearchReport : OktaAction
     {
+        private static readonly IEnumerable<string> EmptyCollection = ImmutableList<string>.Empty;
+        
         private readonly string _search;
-        private readonly ICollection<string> _attrs;
+        private readonly IEnumerable<string> _attrs;
         private readonly Func<IUser, bool> _filter;
 
         /// <summary>
@@ -26,11 +29,14 @@ namespace reporting_tool
         {
             _search = search;
 
-            _attrs = attrs?.Split(",").ToHashSet();
+            _attrs = string.IsNullOrEmpty(attrs) 
+                ? EmptyCollection
+                : attrs.Split(",").ToHashSet();
 
             _filter = new UserFilter(filter).F;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Report main entry
         /// </summary>
