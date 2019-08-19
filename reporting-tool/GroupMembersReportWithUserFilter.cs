@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Okta.Sdk;
 
 namespace reporting_tool
@@ -11,8 +10,9 @@ namespace reporting_tool
     /// </summary>
     public class GroupMembersReportWithUserFilter : OktaAction
     {
+        private static readonly IEnumerable<string> Empty = Enumerable.Empty<string>();
         private readonly string _grpName;
-        private readonly ICollection<string> _usrAttrs;
+        private readonly IEnumerable<string> _usrAttrs;
         private readonly Func<IUser, bool> _filter;
 
         /// <summary>
@@ -27,10 +27,9 @@ namespace reporting_tool
         {
             _grpName = grpName;
 
-            if (string.IsNullOrEmpty(userAttrList))
-                throw new Exception("Required parameter <attrs> is missing");
-
-            _usrAttrs = userAttrList?.Trim().Split(",");
+            _usrAttrs = string.IsNullOrEmpty(userAttrList)
+            ? Empty
+            : userAttrList.Trim().Split(",");
 
             _filter = new UserFilter(userFilter).F;
         }
