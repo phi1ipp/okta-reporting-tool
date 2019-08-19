@@ -57,11 +57,11 @@ namespace reporting_tool
 
             var groupMembershipWithFilter = new Command("groupMembershipWithFilter",
                 handler: CommandHandler.Create<string, string, string>(
-                    (grpName, search, attrs) =>
-                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, search, attrs)
+                    (grpName, filter, attrs) =>
+                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs)
                             .Run()));
             groupMembershipWithFilter.AddOption(optionGroupName);
-            groupMembershipWithFilter.AddOption(optionSearch);
+            groupMembershipWithFilter.AddOption(optionFilter);
             groupMembershipWithFilter.AddOption(optionAttrs);
             root.AddCommand(groupMembershipWithFilter);
 
