@@ -6,14 +6,17 @@ using Okta.Sdk;
 
 namespace reporting_tool
 {
+    /// <inheritdoc />
     /// <summary>
     /// Class to run user report based on user Ids
     /// </summary>
     public class UserReport : OktaAction
     {
+        private static readonly IEnumerable<string> Empty = Enumerable.Empty<string>();
         private readonly FileInfo _fileInfo;
-        private readonly ICollection<string> _attrs;
+        private readonly IEnumerable<string> _attrs;
 
+        /// <inheritdoc />
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -23,9 +26,12 @@ namespace reporting_tool
         public UserReport(OktaConfig config, FileInfo fileInfo, string attrs) : base(config)
         {
             _fileInfo = fileInfo;
-            _attrs = attrs.Trim().Split(",").Select(attr => attr.Trim()).ToHashSet();
+            _attrs = string.IsNullOrEmpty(attrs)
+                ? Empty
+                : attrs.Trim().Split(',').Select(attr => attr.Trim()).ToHashSet();
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Report's main entry
         /// </summary>
@@ -38,8 +44,9 @@ namespace reporting_tool
                                   _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr)))
             );
 
-            File.ReadLines(_fileInfo.FullName)
-                .ToList()
+            var lines = _fileInfo == null ? ReadConsoleLines() : File.ReadLines(_fileInfo.FullName);
+
+            lines
                 .AsParallel()
                 .ForAll(line =>
                 {
@@ -72,6 +79,13 @@ namespace reporting_tool
                         }
                     }
                 });
+        }
+
+        private static IEnumerable<string> ReadConsoleLines()
+        {
+            string s;
+            while ((s = Console.ReadLine()) != null)
+                yield return s;
         }
     }
 }
