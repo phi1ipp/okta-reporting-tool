@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -97,6 +98,12 @@ namespace reporting_tool
             root.AddCommand(activateUsers);
 
             root.InvokeAsync(args).Wait();
+        }
+        public static IEnumerable<string> ReadConsoleLines()
+        {
+            string s;
+            while ((s = Console.ReadLine()) != null)
+                yield return s;
         }
     }
 }

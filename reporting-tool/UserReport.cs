@@ -44,7 +44,7 @@ namespace reporting_tool
                                   _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr)))
             );
 
-            var lines = _fileInfo == null ? ReadConsoleLines() : File.ReadLines(_fileInfo.FullName);
+            var lines = _fileInfo == null ? Program.ReadConsoleLines() : File.ReadLines(_fileInfo.FullName);
 
             lines
                 .AsParallel()
@@ -79,13 +79,6 @@ namespace reporting_tool
                         }
                     }
                 });
-        }
-
-        private static IEnumerable<string> ReadConsoleLines()
-        {
-            string s;
-            while ((s = Console.ReadLine()) != null)
-                yield return s;
         }
     }
 }
