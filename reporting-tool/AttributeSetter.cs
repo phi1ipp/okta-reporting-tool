@@ -10,9 +10,10 @@ namespace reporting_tool
     /// </summary>
     public class AttributeSetter : OktaAction
     {
-        private FileInfo _fileInfo;
-        private string _attrName;
+        private readonly FileInfo _fileInfo;
+        private readonly string _attrName;
 
+        /// <inheritdoc />
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -22,37 +23,50 @@ namespace reporting_tool
         public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName) : base(config)
         {
             _fileInfo = fileInfo;
+
+            if (string.IsNullOrWhiteSpace(attrName))
+                throw new InvalidOperationException("Required parameter --attrName is missing");
+
             _attrName = attrName;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Action's main entry
         /// </summary>
         public override void Run()
         {
+            var lines = _fileInfo == null
+                ? Program.ReadConsoleLines()
+                : File.ReadLines(_fileInfo.FullName);
+
             // produce map of uid -> attrValue
-            var uidToValue = File.ReadLines(_fileInfo.FullName)
+            var uidToValue = lines
                 .Select(line => new List<string>(line.Trim().Split(" ", 2)))
                 .ToDictionary(lst => lst.First(), lst => lst.Last().Replace("\"", ""));
 
-            uidToValue.AsParallel().ForAll(pair =>
-            {
-                var oktaUser = OktaClient.Users.GetUserAsync(pair.Key).Result;
-                oktaUser.Profile[_attrName] = pair.Value;
-
-                try
+            uidToValue
+                .AsParallel()
+                .ForAll(pair =>
                 {
-                    var updatedUser = oktaUser.UpdateAsync().Result;
+                    var (key, value) = pair;
+                    var oktaUser = OktaClient.Users.GetUserAsync(key).Result;
+                    oktaUser.Profile[_attrName] = value;
 
-                    Console.WriteLine($"Updating user {pair.Key}: set attribute {_attrName} to {pair.Value} - success");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(
-                        $"Updating user {pair.Key}: set attribute {_attrName} to {pair.Value} - update failed " +
-                        $"({e.Message})");
-                }
-            });
+                    try
+                    {
+                        oktaUser.UpdateAsync().Wait();
+
+                        Console.WriteLine(
+                            $"Updating user {key}: set attribute {_attrName} to {value} - success");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(
+                            $"Updating user {key}: set attribute {_attrName} to {value} - update failed " +
+                            $"({e.Message})");
+                    }
+                });
         }
     }
 }
