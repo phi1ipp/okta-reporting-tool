@@ -20,6 +20,30 @@ namespace TestBoolExpr
         }
         
         [Fact]
+        public void TestContainsProfileAttributeTrue()
+        {
+            var expression = "profile.LOA co \"3\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User(){Profile = new UserProfile{["LOA"] = "asdf3asdf"}};
+            
+            Assert.True(f(user));
+        }
+        
+        [Fact]
+        public void TestContainsProfileAttributeFalse()
+        {
+            var expression = "profile.LOA co \"5\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User(){Profile = new UserProfile{["LOA"] = "asdf3asdf"}};
+            
+            Assert.False(f(user));
+        }
+        
+        [Fact]
         public void TestEqualProfileAttribute()
         {
             var expression = "profile.LOA eq \"3\"";

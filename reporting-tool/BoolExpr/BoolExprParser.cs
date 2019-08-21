@@ -36,8 +36,8 @@ public partial class BoolExprParser : Parser {
 	protected static DFA[] decisionToDFA;
 	protected static PredictionContextCache sharedContextCache = new PredictionContextCache();
 	public const int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, ATTR=9, 
-		STR=10, WS=11;
+		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
+		ATTR=10, STR=11, WS=12;
 	public const int
 		RULE_expr = 0, RULE_attr_comp = 1, RULE_attr_pr = 2, RULE_attr = 3;
 	public static readonly string[] ruleNames = {
@@ -45,10 +45,12 @@ public partial class BoolExprParser : Parser {
 	};
 
 	private static readonly string[] _LiteralNames = {
-		null, "'('", "')'", "'and'", "'or'", "'not'", "'eq'", "'pr'", "'profile.'"
+		null, "'('", "')'", "'and'", "'or'", "'not'", "'eq'", "'co'", "'pr'", 
+		"'profile.'"
 	};
 	private static readonly string[] _SymbolicNames = {
-		null, null, null, null, null, null, null, null, null, "ATTR", "STR", "WS"
+		null, null, null, null, null, null, null, null, null, null, "ATTR", "STR", 
+		"WS"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -102,14 +104,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<ExprContext>(i);
 		}
 		public AndExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterAndExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitAndExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAndExp(this);
@@ -121,14 +115,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<Attr_prContext>(0);
 		}
 		public AttrPrExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterAttrPrExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitAttrPrExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAttrPrExp(this);
@@ -140,14 +126,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<ExprContext>(0);
 		}
 		public ParenthesisExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterParenthesisExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitParenthesisExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitParenthesisExp(this);
@@ -159,14 +137,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<Attr_compContext>(0);
 		}
 		public AttrCompExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterAttrCompExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitAttrCompExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAttrCompExp(this);
@@ -181,14 +151,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<ExprContext>(i);
 		}
 		public OrExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterOrExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitOrExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitOrExp(this);
@@ -200,14 +162,6 @@ public partial class BoolExprParser : Parser {
 			return GetRuleContext<ExprContext>(0);
 		}
 		public NotExpContext(ExprContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterNotExp(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitNotExp(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNotExp(this);
@@ -325,26 +279,38 @@ public partial class BoolExprParser : Parser {
 	}
 
 	public partial class Attr_compContext : ParserRuleContext {
-		public AttrContext attr() {
-			return GetRuleContext<AttrContext>(0);
-		}
-		public ITerminalNode STR() { return GetToken(BoolExprParser.STR, 0); }
 		public Attr_compContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_attr_comp; } }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterAttr_comp(this);
+	 
+		public Attr_compContext() { }
+		public virtual void CopyFrom(Attr_compContext context) {
+			base.CopyFrom(context);
 		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitAttr_comp(this);
+	}
+	public partial class CoCompareContext : Attr_compContext {
+		public AttrContext attr() {
+			return GetRuleContext<AttrContext>(0);
 		}
+		public ITerminalNode STR() { return GetToken(BoolExprParser.STR, 0); }
+		public CoCompareContext(Attr_compContext context) { CopyFrom(context); }
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitAttr_comp(this);
+			if (typedVisitor != null) return typedVisitor.VisitCoCompare(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class EqCompareContext : Attr_compContext {
+		public AttrContext attr() {
+			return GetRuleContext<AttrContext>(0);
+		}
+		public ITerminalNode STR() { return GetToken(BoolExprParser.STR, 0); }
+		public EqCompareContext(Attr_compContext context) { CopyFrom(context); }
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitEqCompare(this);
 			else return visitor.VisitChildren(this);
 		}
 	}
@@ -354,11 +320,27 @@ public partial class BoolExprParser : Parser {
 		Attr_compContext _localctx = new Attr_compContext(Context, State);
 		EnterRule(_localctx, 2, RULE_attr_comp);
 		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 30; attr();
-			State = 31; Match(T__5);
-			State = 32; Match(STR);
+			State = 38;
+			ErrorHandler.Sync(this);
+			switch ( Interpreter.AdaptivePredict(TokenStream,3,Context) ) {
+			case 1:
+				_localctx = new EqCompareContext(_localctx);
+				EnterOuterAlt(_localctx, 1);
+				{
+				State = 30; attr();
+				State = 31; Match(T__5);
+				State = 32; Match(STR);
+				}
+				break;
+			case 2:
+				_localctx = new CoCompareContext(_localctx);
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 34; attr();
+				State = 35; Match(T__6);
+				State = 36; Match(STR);
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -381,14 +363,6 @@ public partial class BoolExprParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_attr_pr; } }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterAttr_pr(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitAttr_pr(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAttr_pr(this);
@@ -403,8 +377,8 @@ public partial class BoolExprParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 34; attr();
-			State = 35; Match(T__6);
+			State = 40; attr();
+			State = 41; Match(T__7);
 			}
 		}
 		catch (RecognitionException re) {
@@ -433,14 +407,6 @@ public partial class BoolExprParser : Parser {
 	public partial class ProfileAttrContext : AttrContext {
 		public ITerminalNode ATTR() { return GetToken(BoolExprParser.ATTR, 0); }
 		public ProfileAttrContext(AttrContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterProfileAttr(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitProfileAttr(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitProfileAttr(this);
@@ -450,14 +416,6 @@ public partial class BoolExprParser : Parser {
 	public partial class NonProfileAttrContext : AttrContext {
 		public ITerminalNode ATTR() { return GetToken(BoolExprParser.ATTR, 0); }
 		public NonProfileAttrContext(AttrContext context) { CopyFrom(context); }
-		public override void EnterRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.EnterNonProfileAttr(this);
-		}
-		public override void ExitRule(IParseTreeListener listener) {
-			IBoolExprListener typedListener = listener as IBoolExprListener;
-			if (typedListener != null) typedListener.ExitNonProfileAttr(this);
-		}
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IBoolExprVisitor<TResult> typedVisitor = visitor as IBoolExprVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNonProfileAttr(this);
@@ -470,22 +428,22 @@ public partial class BoolExprParser : Parser {
 		AttrContext _localctx = new AttrContext(Context, State);
 		EnterRule(_localctx, 6, RULE_attr);
 		try {
-			State = 40;
+			State = 46;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
-			case T__7:
+			case T__8:
 				_localctx = new ProfileAttrContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 37; Match(T__7);
-				State = 38; Match(ATTR);
+				State = 43; Match(T__8);
+				State = 44; Match(ATTR);
 				}
 				break;
 			case ATTR:
 				_localctx = new NonProfileAttrContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 39; Match(ATTR);
+				State = 45; Match(ATTR);
 				}
 				break;
 			default:
@@ -519,42 +477,47 @@ public partial class BoolExprParser : Parser {
 
 	private static char[] _serializedATN = {
 		'\x3', '\x608B', '\xA72A', '\x8133', '\xB9ED', '\x417C', '\x3BE7', '\x7786', 
-		'\x5964', '\x3', '\r', '-', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', '\t', 
-		'\x3', '\x4', '\x4', '\t', '\x4', '\x4', '\x5', '\t', '\x5', '\x3', '\x2', 
-		'\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', 
-		'\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x5', '\x2', '\x14', '\n', 
+		'\x5964', '\x3', '\xE', '\x33', '\x4', '\x2', '\t', '\x2', '\x4', '\x3', 
+		'\t', '\x3', '\x4', '\x4', '\t', '\x4', '\x4', '\x5', '\t', '\x5', '\x3', 
 		'\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', 
+		'\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x5', '\x2', '\x14', 
+		'\n', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', '\x2', '\x3', 
 		'\x2', '\x3', '\x2', '\a', '\x2', '\x1C', '\n', '\x2', '\f', '\x2', '\xE', 
 		'\x2', '\x1F', '\v', '\x2', '\x3', '\x3', '\x3', '\x3', '\x3', '\x3', 
-		'\x3', '\x3', '\x3', '\x4', '\x3', '\x4', '\x3', '\x4', '\x3', '\x5', 
-		'\x3', '\x5', '\x3', '\x5', '\x5', '\x5', '+', '\n', '\x5', '\x3', '\x5', 
-		'\x2', '\x3', '\x2', '\x6', '\x2', '\x4', '\x6', '\b', '\x2', '\x2', '\x2', 
-		'.', '\x2', '\x13', '\x3', '\x2', '\x2', '\x2', '\x4', ' ', '\x3', '\x2', 
-		'\x2', '\x2', '\x6', '$', '\x3', '\x2', '\x2', '\x2', '\b', '*', '\x3', 
-		'\x2', '\x2', '\x2', '\n', '\v', '\b', '\x2', '\x1', '\x2', '\v', '\f', 
-		'\a', '\x3', '\x2', '\x2', '\f', '\r', '\x5', '\x2', '\x2', '\x2', '\r', 
-		'\xE', '\a', '\x4', '\x2', '\x2', '\xE', '\x14', '\x3', '\x2', '\x2', 
-		'\x2', '\xF', '\x10', '\a', '\a', '\x2', '\x2', '\x10', '\x14', '\x5', 
-		'\x2', '\x2', '\x5', '\x11', '\x14', '\x5', '\x4', '\x3', '\x2', '\x12', 
-		'\x14', '\x5', '\x6', '\x4', '\x2', '\x13', '\n', '\x3', '\x2', '\x2', 
-		'\x2', '\x13', '\xF', '\x3', '\x2', '\x2', '\x2', '\x13', '\x11', '\x3', 
-		'\x2', '\x2', '\x2', '\x13', '\x12', '\x3', '\x2', '\x2', '\x2', '\x14', 
-		'\x1D', '\x3', '\x2', '\x2', '\x2', '\x15', '\x16', '\f', '\a', '\x2', 
-		'\x2', '\x16', '\x17', '\a', '\x5', '\x2', '\x2', '\x17', '\x1C', '\x5', 
-		'\x2', '\x2', '\b', '\x18', '\x19', '\f', '\x6', '\x2', '\x2', '\x19', 
-		'\x1A', '\a', '\x6', '\x2', '\x2', '\x1A', '\x1C', '\x5', '\x2', '\x2', 
-		'\a', '\x1B', '\x15', '\x3', '\x2', '\x2', '\x2', '\x1B', '\x18', '\x3', 
-		'\x2', '\x2', '\x2', '\x1C', '\x1F', '\x3', '\x2', '\x2', '\x2', '\x1D', 
-		'\x1B', '\x3', '\x2', '\x2', '\x2', '\x1D', '\x1E', '\x3', '\x2', '\x2', 
-		'\x2', '\x1E', '\x3', '\x3', '\x2', '\x2', '\x2', '\x1F', '\x1D', '\x3', 
-		'\x2', '\x2', '\x2', ' ', '!', '\x5', '\b', '\x5', '\x2', '!', '\"', '\a', 
-		'\b', '\x2', '\x2', '\"', '#', '\a', '\f', '\x2', '\x2', '#', '\x5', '\x3', 
-		'\x2', '\x2', '\x2', '$', '%', '\x5', '\b', '\x5', '\x2', '%', '&', '\a', 
-		'\t', '\x2', '\x2', '&', '\a', '\x3', '\x2', '\x2', '\x2', '\'', '(', 
-		'\a', '\n', '\x2', '\x2', '(', '+', '\a', '\v', '\x2', '\x2', ')', '+', 
-		'\a', '\v', '\x2', '\x2', '*', '\'', '\x3', '\x2', '\x2', '\x2', '*', 
-		')', '\x3', '\x2', '\x2', '\x2', '+', '\t', '\x3', '\x2', '\x2', '\x2', 
-		'\x6', '\x13', '\x1B', '\x1D', '*',
+		'\x3', '\x3', '\x3', '\x3', '\x3', '\x3', '\x3', '\x3', '\x3', '\x3', 
+		'\x5', '\x3', ')', '\n', '\x3', '\x3', '\x4', '\x3', '\x4', '\x3', '\x4', 
+		'\x3', '\x5', '\x3', '\x5', '\x3', '\x5', '\x5', '\x5', '\x31', '\n', 
+		'\x5', '\x3', '\x5', '\x2', '\x3', '\x2', '\x6', '\x2', '\x4', '\x6', 
+		'\b', '\x2', '\x2', '\x2', '\x35', '\x2', '\x13', '\x3', '\x2', '\x2', 
+		'\x2', '\x4', '(', '\x3', '\x2', '\x2', '\x2', '\x6', '*', '\x3', '\x2', 
+		'\x2', '\x2', '\b', '\x30', '\x3', '\x2', '\x2', '\x2', '\n', '\v', '\b', 
+		'\x2', '\x1', '\x2', '\v', '\f', '\a', '\x3', '\x2', '\x2', '\f', '\r', 
+		'\x5', '\x2', '\x2', '\x2', '\r', '\xE', '\a', '\x4', '\x2', '\x2', '\xE', 
+		'\x14', '\x3', '\x2', '\x2', '\x2', '\xF', '\x10', '\a', '\a', '\x2', 
+		'\x2', '\x10', '\x14', '\x5', '\x2', '\x2', '\x5', '\x11', '\x14', '\x5', 
+		'\x4', '\x3', '\x2', '\x12', '\x14', '\x5', '\x6', '\x4', '\x2', '\x13', 
+		'\n', '\x3', '\x2', '\x2', '\x2', '\x13', '\xF', '\x3', '\x2', '\x2', 
+		'\x2', '\x13', '\x11', '\x3', '\x2', '\x2', '\x2', '\x13', '\x12', '\x3', 
+		'\x2', '\x2', '\x2', '\x14', '\x1D', '\x3', '\x2', '\x2', '\x2', '\x15', 
+		'\x16', '\f', '\a', '\x2', '\x2', '\x16', '\x17', '\a', '\x5', '\x2', 
+		'\x2', '\x17', '\x1C', '\x5', '\x2', '\x2', '\b', '\x18', '\x19', '\f', 
+		'\x6', '\x2', '\x2', '\x19', '\x1A', '\a', '\x6', '\x2', '\x2', '\x1A', 
+		'\x1C', '\x5', '\x2', '\x2', '\a', '\x1B', '\x15', '\x3', '\x2', '\x2', 
+		'\x2', '\x1B', '\x18', '\x3', '\x2', '\x2', '\x2', '\x1C', '\x1F', '\x3', 
+		'\x2', '\x2', '\x2', '\x1D', '\x1B', '\x3', '\x2', '\x2', '\x2', '\x1D', 
+		'\x1E', '\x3', '\x2', '\x2', '\x2', '\x1E', '\x3', '\x3', '\x2', '\x2', 
+		'\x2', '\x1F', '\x1D', '\x3', '\x2', '\x2', '\x2', ' ', '!', '\x5', '\b', 
+		'\x5', '\x2', '!', '\"', '\a', '\b', '\x2', '\x2', '\"', '#', '\a', '\r', 
+		'\x2', '\x2', '#', ')', '\x3', '\x2', '\x2', '\x2', '$', '%', '\x5', '\b', 
+		'\x5', '\x2', '%', '&', '\a', '\t', '\x2', '\x2', '&', '\'', '\a', '\r', 
+		'\x2', '\x2', '\'', ')', '\x3', '\x2', '\x2', '\x2', '(', ' ', '\x3', 
+		'\x2', '\x2', '\x2', '(', '$', '\x3', '\x2', '\x2', '\x2', ')', '\x5', 
+		'\x3', '\x2', '\x2', '\x2', '*', '+', '\x5', '\b', '\x5', '\x2', '+', 
+		',', '\a', '\n', '\x2', '\x2', ',', '\a', '\x3', '\x2', '\x2', '\x2', 
+		'-', '.', '\a', '\v', '\x2', '\x2', '.', '\x31', '\a', '\f', '\x2', '\x2', 
+		'/', '\x31', '\a', '\f', '\x2', '\x2', '\x30', '-', '\x3', '\x2', '\x2', 
+		'\x2', '\x30', '/', '\x3', '\x2', '\x2', '\x2', '\x31', '\t', '\x3', '\x2', 
+		'\x2', '\x2', '\a', '\x13', '\x1B', '\x1D', '(', '\x30',
 	};
 
 	public static readonly ATN _ATN =

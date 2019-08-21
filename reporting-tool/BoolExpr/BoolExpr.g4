@@ -8,7 +8,10 @@ expr : '(' expr')'      #parenthesisExp
     | attr_pr           #attrPrExp
     ;
     
-attr_comp : attr 'eq' STR ;
+attr_comp : attr 'eq' STR       #eqCompare
+            | attr 'co' STR     #coCompare
+            ;
+            
 attr_pr   : attr 'pr' ;
 attr      : 'profile.' ATTR #profileAttr
             | ATTR          #nonProfileAttr

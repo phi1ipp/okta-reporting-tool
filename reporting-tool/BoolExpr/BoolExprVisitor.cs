@@ -74,11 +74,19 @@ public interface IBoolExprVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitNotExp([NotNull] BoolExprParser.NotExpContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="BoolExprParser.attr_comp"/>.
+	/// Visit a parse tree produced by the <c>eqCompare</c>
+	/// labeled alternative in <see cref="BoolExprParser.attr_comp"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitAttr_comp([NotNull] BoolExprParser.Attr_compContext context);
+	Result VisitEqCompare([NotNull] BoolExprParser.EqCompareContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>coCompare</c>
+	/// labeled alternative in <see cref="BoolExprParser.attr_comp"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCoCompare([NotNull] BoolExprParser.CoCompareContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="BoolExprParser.attr_pr"/>.
 	/// </summary>

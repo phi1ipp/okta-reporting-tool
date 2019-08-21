@@ -72,7 +72,7 @@ namespace reporting_tool
                     : !string.IsNullOrEmpty(user.GetNonProfileAttribute(attrName));
         }
 
-        public override Func<IUser, bool> VisitAttr_comp(BoolExprParser.Attr_compContext context)
+        public override Func<IUser, bool> VisitEqCompare(BoolExprParser.EqCompareContext context)
         {
             var attrVal = context.children.Last().GetText().Trim('"');
 
@@ -82,6 +82,18 @@ namespace reporting_tool
                 attrType == "profile"
                     ? user.Profile[attrName]?.ToString() == attrVal
                     : user.GetNonProfileAttribute(attrName) == attrVal;
+        }
+
+        public override Func<IUser, bool> VisitCoCompare(BoolExprParser.CoCompareContext context)
+        {
+            var attrVal = context.children.Last().GetText().Trim('"');
+
+            var (attrType, attrName) = GetAttributeInfo(context.children.First());
+
+            return user =>
+                attrType == "profile"
+                    ? user.Profile[attrName]?.ToString()?.Contains(attrVal) ?? false
+                    : user.GetNonProfileAttribute(attrName).Contains(attrVal);
         }
 
         public override Func<IUser, bool> VisitParenthesisExp(BoolExprParser.ParenthesisExpContext context) =>
