@@ -29,7 +29,7 @@ namespace reporting_tool
             {
                 OktaDomain = _oktaConfig.Domain,
                 Token = _oktaConfig.ApiKey,
-                RateLimitPreservationPercent = 10
+                RateLimitPreservationPercent = _oktaConfig.RateLimiPreservationPct ?? 10,
             },
             new HttpClient(),
             null,
