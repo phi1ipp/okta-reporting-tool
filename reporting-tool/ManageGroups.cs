@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Okta.Sdk;
 
 namespace reporting_tool
 {
@@ -57,44 +58,59 @@ namespace reporting_tool
                 {
                     var (uuid, groups) = tuple;
 
-                    var tasks = groups.Select(grp => Task.Run(() =>
+                    if (_action == "display")
                     {
-                        var grpId = OktaClient.Groups
-                            .ListGroups(q: grp)
-                            .Select(g => g.Id)
-                            .FirstOrDefault()
-                            .Result;
-
-                        if (grpId == null)
+                        try
                         {
-                            return $"{grp} doesn't exist in Okta";
+                            Console.WriteLine(uuid + " " +
+                                              string.Join(',',
+                                                  OktaClient.Users
+                                                      .ListUserGroups(uuid)
+                                                      .Select(g =>
+                                                          g.Profile.Name.Contains(' ')
+                                                              ? $"\"{g.Profile.Name}\""
+                                                              : g.Profile.Name)
+                                                      .ToList()
+                                                      .Result));
+                        }
+                        catch (Exception e)
+                        {
+                            if (e.InnerException is OktaApiException oktaApiException &&
+                                oktaApiException.Message.StartsWith("Not found"))
+                                Console.WriteLine($"{uuid} not found");
                         }
 
-                        switch (_action)
+                        return;
+                    }
+
+                    var tasks = groups.Select(grp =>
+                        Task.Run(() =>
                         {
-                            case "add":
-                                OktaClient.Groups.AddUserToGroupAsync(grpId, uuid).Wait();
-                                return $"{grp} added to {uuid}";
+                            var grpId = OktaClient.Groups
+                                .ListGroups(q: grp)
+                                .Select(g => g.Id)
+                                .FirstOrDefault()
+                                .Result;
 
-                            case "remove":
-                                OktaClient.Groups.RemoveGroupUserAsync(grpId, uuid).Wait();
-                                return ($"{grp} removed from {uuid}");
+                            if (grpId == null)
+                            {
+                                return $"{grp} doesn't exist in Okta";
+                            }
 
-                            case "display":
-                                return uuid + " " +
-                                       string.Join(',',
-                                           OktaClient.Users
-                                               .ListUserGroups(uuid)
-                                               .Select(g =>
-                                                   g.Profile.Name.Contains(' ')
-                                                       ? $"\"{g.Profile.Name}\""
-                                                       : g.Profile.Name)
-                                               .ToList()
-                                               .Result);
-                            default:
-                                return $"unknown action: {_action}";
-                        }
-                    }));
+                            switch (_action)
+                            {
+                                case "add":
+                                    OktaClient.Groups.AddUserToGroupAsync(grpId, uuid).Wait();
+                                    return $"{grp} added to {uuid}";
+
+                                case "remove":
+                                    OktaClient.Groups.RemoveGroupUserAsync(grpId, uuid).Wait();
+                                    return ($"{grp} removed from {uuid}");
+
+                                default:
+                                    return $"unknown action: {_action}";
+                            }
+                        }));
 
                     var operationsResults = Task.WhenAll(tasks).Result;
                     Console.WriteLine(string.Join('\n', operationsResults));
