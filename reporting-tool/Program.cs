@@ -89,7 +89,7 @@ namespace reporting_tool
                     new ManageGroups(oktaConfig, input, action).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
-            manageGroups.AddOption(new Option("--action", "add or remove given list of groups", new Argument<string>()));
+            manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
             root.AddCommand(manageGroups);
 
             root.InvokeAsync(args).Wait();
