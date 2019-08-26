@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
@@ -19,6 +21,9 @@ namespace reporting_tool
         protected OktaAction(OktaConfig oktaConfig)
         {
             _oktaConfig = oktaConfig;
+
+            if (string.IsNullOrEmpty(_oktaConfig.ApiKey))
+                _oktaConfig.ApiKey = PromptAndReadToken();
         }
 
         /// <summary>
@@ -41,5 +46,27 @@ namespace reporting_tool
         /// Entry point for execution of action
         /// </summary>
         public abstract void Run();
+
+        private string PromptAndReadToken()
+        {
+            var token = "";
+            Console.WriteLine("Enter token: ");
+
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    Console.Write('\n');
+                    break;
+                }
+
+                Console.Write('*');
+                token += key.KeyChar;
+            }
+
+            return token;
+        }
     }
 }
