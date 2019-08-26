@@ -19,6 +19,7 @@ namespace reporting_tool
         /// </summary>
         /// <param name="config">Okta Configuration class</param>
         /// <param name="fileInfo">File path to use as a source of user entries to run the report for</param>
+        /// <param name="attrs">Attributes to output for a found creator</param>
         public CreatorReport(OktaConfig config, FileInfo fileInfo, string attrs) : base(config)
         {
             _fileInfo = fileInfo;
