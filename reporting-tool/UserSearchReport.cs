@@ -1,6 +1,6 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Okta.Sdk;
 
@@ -12,8 +12,7 @@ namespace reporting_tool
     /// </summary>
     public class UserSearchReport : OktaAction
     {
-        private static readonly IEnumerable<string> EmptyCollection = ImmutableList<string>.Empty;
-        
+        private readonly string _ofs;
         private readonly string _search;
         private readonly IEnumerable<string> _attrs;
         private readonly Func<IUser, bool> _filter;
@@ -25,12 +24,15 @@ namespace reporting_tool
         /// <param name="search">User search expression in Okta API language</param>
         /// <param name="filter">User filter</param>
         /// <param name="attrs">List of attributes to output for each user (CSV)</param>
-        public UserSearchReport(OktaConfig config, string search, string filter, string attrs) : base(config)
+        /// <param name="ofs">Output field separator</param>
+        public UserSearchReport(OktaConfig config, string search, string filter, string attrs, string ofs = " ") :
+            base(config)
         {
             _search = search;
+            _ofs = ofs;
 
-            _attrs = string.IsNullOrEmpty(attrs) 
-                ? EmptyCollection
+            _attrs = string.IsNullOrEmpty(attrs)
+                ? Enumerable.Empty<string>()
                 : attrs.Split(",").ToHashSet();
 
             _filter = new UserFilter(filter).F;
@@ -42,29 +44,35 @@ namespace reporting_tool
         /// </summary>
         public override void Run()
         {
-            Console.WriteLine("id " +
-                              string.Join(" ",
+            Console.WriteLine("id" +
+                              string.Join(_ofs,
                                   _attrs.Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))) +
-                              " " +
-                              string.Join(" ",
+                              _ofs +
+                              string.Join(_ofs,
                                   _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))));
 
             var userBase = string.IsNullOrEmpty(_search)
                 ? OktaClient.Users.Where(user => _filter(user))
                 : OktaClient.Users.ListUsers(search: _search).Where(user => _filter(user));
-            
+
             userBase
                 .ForEachAsync(user =>
                 {
-                    Console.WriteLine($"{user.Id} " +
-                                      string.Join(" ",
-                                          _attrs
-                                              .Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))
-                                              .Select(user.GetNonProfileAttribute)) + " " +
-                                      string.Join(" ",
-                                          _attrs
-                                              .Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
-                                              .Select(attr => user.Profile[attr]?.ToString())));
+                    var values = new[]
+                    {
+                        new[] {$"{user.Id}"},
+                        _attrs
+                            .Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))
+                            .Select(user.GetNonProfileAttribute),
+                        _attrs
+                            .Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
+                            .Select(attr => user.Profile[attr]?.ToString())
+                    }
+                        .Where(lst => lst.Any())
+                        .SelectMany(x => x)
+                        .Select(attr => attr.Contains(_ofs) ? $"\"{attr}\"" : attr);
+                    
+                    Console.WriteLine(string.Join(_ofs, values));
                 })
                 .Wait();
         }
