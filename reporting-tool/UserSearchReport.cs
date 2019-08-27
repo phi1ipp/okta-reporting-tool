@@ -70,7 +70,7 @@ namespace reporting_tool
                     }
                         .Where(lst => lst.Any())
                         .SelectMany(x => x)
-                        .Select(attr => attr.Contains(_ofs) ? $"\"{attr}\"" : attr);
+                        .Select(attr => !string.IsNullOrEmpty(attr) && attr.Contains(_ofs) ? $"\"{attr}\"" : attr);
                     
                     Console.WriteLine(string.Join(_ofs, values));
                 })
