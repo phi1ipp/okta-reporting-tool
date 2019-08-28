@@ -10,7 +10,6 @@ namespace reporting_tool
     /// </summary>
     public class GroupMembersReportWithUserFilter : OktaAction
     {
-        private static readonly IEnumerable<string> Empty = Enumerable.Empty<string>();
         private readonly string _grpName;
         private readonly IEnumerable<string> _usrAttrs;
         private readonly Func<IUser, bool> _filter;
@@ -28,7 +27,7 @@ namespace reporting_tool
             _grpName = grpName;
 
             _usrAttrs = string.IsNullOrEmpty(userAttrList)
-            ? Empty
+            ? Enumerable.Empty<string>()
             : userAttrList.Trim().Split(",");
 
             _filter = new UserFilter(userFilter).F;
