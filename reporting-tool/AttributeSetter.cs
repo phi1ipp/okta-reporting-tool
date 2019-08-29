@@ -13,6 +13,7 @@ namespace reporting_tool
     {
         private readonly FileInfo _fileInfo;
         private readonly string _attrName;
+        private readonly string _attrVal;
 
         /// <inheritdoc />
         /// <summary>
@@ -21,7 +22,8 @@ namespace reporting_tool
         /// <param name="config">Okta Config instance</param>
         /// <param name="fileInfo">FileInfo to use as a source of records</param>
         /// <param name="attrName">Attribute name to be set</param>
-        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName) : base(config)
+        /// <param name="attrValue">Attribute value to be set for all users</param>
+        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName, string attrValue) : base(config)
         {
             _fileInfo = fileInfo;
 
@@ -29,6 +31,9 @@ namespace reporting_tool
                 throw new InvalidOperationException("Required parameter --attrName is missing");
 
             _attrName = attrName;
+
+            if (!string.IsNullOrWhiteSpace(attrValue))
+                _attrVal = attrValue;
         }
 
         /// <inheritdoc />
@@ -42,9 +47,14 @@ namespace reporting_tool
                 : File.ReadLines(_fileInfo.FullName);
 
             // produce map of uid -> attrValue
-            var uidToValue = lines
-                .Select(line => new List<string>(line.Trim().Split(" ", 2)))
-                .ToDictionary(lst => lst.First(), lst => lst.Last().Replace("\"", ""));
+            // if _attrVal is set -> override what comes from a source input
+            var uidToValue = _attrVal == null
+                ? lines
+                    .Select(line => new List<string>(line.Trim().Split(" ", 2)))
+                    .ToDictionary(lst => lst.First(), lst => lst.Last().Replace("\"", ""))
+                : lines
+                    .Select(line => new List<string>(line.Trim().Split(" ", 2)))
+                    .ToDictionary(lst => lst.First(), lst => _attrVal);
 
             uidToValue
                 .AsParallel()
