@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Okta.Sdk;
 
 namespace reporting_tool
 {
@@ -50,7 +51,25 @@ namespace reporting_tool
                 .ForAll(pair =>
                 {
                     var (key, value) = pair;
-                    var oktaUser = OktaClient.Users.GetUserAsync(key).Result;
+                    IUser oktaUser;
+
+                    try
+                    {
+                        oktaUser = OktaClient.Users.GetUserAsync(key).Result;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.InnerException is OktaApiException oktaApiException &&
+                            oktaApiException.Message.Contains("Not found"))
+                            Console.WriteLine($"{key} !!! user not found");
+                        else
+                        {
+                            Console.WriteLine($"{key} !!! exception fetching the user");
+                        }
+
+                        return;
+                    }
+
                     oktaUser.Profile[_attrName] = value;
 
                     try
