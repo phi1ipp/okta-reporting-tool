@@ -4,6 +4,8 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace reporting_tool
 {
@@ -14,13 +16,14 @@ namespace reporting_tool
             var oktaConfig = OktaConfig.BuildConfig();
 
             var root = new RootCommand();
+            var optionOfs = new Option("-OFS", "output field separator", new Argument<string>());
+            root.AddOption(optionOfs);
 
             var optionAttrs = new Option("--attrs", "attributes to output", new Argument<string>());
             var optionInputFile = new Option("--input", "input file name", new Argument<FileInfo>());
             var optionGroupName = new Option("--grpName", "group name to run report for", new Argument<string>());
             var optionSearch = new Option("--search", "search expression", new Argument<string>());
             var optionFilter = new Option("--filter", "filter expression", new Argument<string>());
-            var optionOfs = new Option("-OFS", "output field separator", new Argument<string>());
 
             var aCommand = new Command("findCreator",
                 handler: CommandHandler.Create<FileInfo, string>((input, attrs) =>
@@ -51,7 +54,7 @@ namespace reporting_tool
                 new Argument<string>()));
             root.AddCommand(cCommand);
 
-            var groupMembershipWithFilter = new Command("groupMembershipWithFilter",
+            var groupMembershipWithFilter = new Command("groupMembership",
                 handler: CommandHandler.Create<string, string, string>(
                     (grpName, filter, attrs) =>
                         new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs)
@@ -86,7 +89,7 @@ namespace reporting_tool
             gCommand.AddOption(optionSearch);
             gCommand.AddOption(optionFilter);
             gCommand.AddOption(optionAttrs);
-            gCommand.AddOption(optionOfs);
+            gCommand.AddOption(root.FirstOrDefault(sym => sym.Name == "OFS") as Option);
             root.AddCommand(gCommand);
 
             var activateUsers = new Command("activateUsers",
@@ -103,9 +106,11 @@ namespace reporting_tool
             manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
             root.AddCommand(manageGroups);
 
-            root.AddOption(optionOfs);
+            var injectedArgs = args.All(s => s != "-OFS")
+                ? args.Union(new[] {"-OFS", ","}).ToArray()
+                : args;
 
-            root.InvokeAsync(args).Wait();
+            root.InvokeAsync(injectedArgs).Wait();
         }
 
         public static IEnumerable<string> ReadConsoleLines()
