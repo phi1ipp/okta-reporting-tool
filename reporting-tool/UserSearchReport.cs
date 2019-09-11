@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Okta.Sdk;
 
 namespace reporting_tool
@@ -44,41 +45,16 @@ namespace reporting_tool
         /// </summary>
         public override void Run()
         {
-            Console.WriteLine(
-                string.Join(
-                    _ofs,
-                    new[]
-                        {
-                            new[] {"id"},
-                            _attrs.Where(attr => UserAttributes.NonProfileAttribute.Contains(attr)),
-                            _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
-                        }.Where(en => en.Any())
-                        .SelectMany(x => x)));
+            Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             var userBase = string.IsNullOrEmpty(_search)
                 ? OktaClient.Users.Where(user => _filter(user))
                 : OktaClient.Users.ListUsers(search: _search).Where(user => _filter(user));
 
-            userBase
-                .ForEachAsync(user =>
-                {
-                    var values = new[]
-                        {
-                            new[] {$"{user.Id}"},
-                            _attrs
-                                .Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))
-                                .Select(user.GetNonProfileAttribute),
-                            _attrs
-                                .Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
-                                .Select(attr => user.Profile[attr]?.ToString())
-                        }
-                        .Where(lst => lst.Any())
-                        .SelectMany(x => x)
-                        .Select(attr => !string.IsNullOrEmpty(attr) && attr.Contains(_ofs) ? $"\"{attr}\"" : attr);
-
-                    Console.WriteLine(string.Join(_ofs, values));
-                })
-                .Wait();
+            userBase.ForEachAsync(async user =>
+            {
+                Console.WriteLine(await user.PrintAttributes(_attrs, OktaClient, _ofs));
+            }).Wait();
         }
     }
 }
