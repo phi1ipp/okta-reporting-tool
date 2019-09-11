@@ -77,6 +77,7 @@ namespace reporting_tool
             fCommand.AddOption(optionInputFile);
             fCommand.AddOption(optionAttrs);
             fCommand.AddOption(new Option("--attrName", "attribute name to check", new Argument<string>()));
+            fCommand.AddOption(optionOfs);
             root.AddCommand(fCommand);
 
             var gCommand = new Command("userSearchReport",
@@ -101,11 +102,12 @@ namespace reporting_tool
                     new ManageGroups(oktaConfig, input, action).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
+            manageGroups.AddOption(optionOfs);
             manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
             root.AddCommand(manageGroups);
 
             var injectedArgs = args.All(s => s != "-OFS")
-                ? args.Union(new[] {"-OFS", ","}).ToArray()
+                ? args.Concat(new[] {"-OFS", ","}).ToArray()
                 : args;
 
             root.InvokeAsync(injectedArgs).Wait();
