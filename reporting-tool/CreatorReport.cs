@@ -13,6 +13,7 @@ namespace reporting_tool
     {
         private readonly FileInfo _fileInfo;
         private readonly IEnumerable<string> _attrs;
+        private readonly string _ofs;
 
         /// <summary>
         /// Constructor
@@ -20,13 +21,15 @@ namespace reporting_tool
         /// <param name="config">Okta Configuration class</param>
         /// <param name="fileInfo">File path to use as a source of user entries to run the report for</param>
         /// <param name="attrs">Attributes to output for a found creator</param>
-        public CreatorReport(OktaConfig config, FileInfo fileInfo, string attrs) : base(config)
+        public CreatorReport(OktaConfig config, FileInfo fileInfo, string attrs, string ofs = " ") : base(config)
         {
             _fileInfo = fileInfo;
 
             _attrs = string.IsNullOrEmpty(attrs)
                 ? Enumerable.Empty<string>()
                 : attrs.Trim().Split(',').Select(attr => attr.Trim()).ToHashSet();
+
+            _ofs = ofs;
         }
 
         /// <summary>
@@ -38,19 +41,14 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
-            Console.WriteLine("userid id " +
-                              string.Join(" ",
-                                  _attrs.Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))) + " " +
-                              string.Join(" ",
-                                  _attrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr)))
-            );
+            Console.WriteLine("userid" + _ofs + UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             lines
                 .Select(line => line.Trim().Split(' ', ',').First())
                 .AsParallel()
                 .ForAll(userId =>
                     Console.WriteLine(
-                        userId + " " +
+                        userId + _ofs +
                         OktaClient.Logs
                             .GetLogs(
                                 filter:
@@ -60,17 +58,7 @@ namespace reporting_tool
                             {
                                 var user = OktaClient.Users.GetUserAsync(ev.Actor.Id).Result;
 
-                                return ev.Actor.Id + " " +
-                                       string.Join(" ",
-                                           _attrs
-                                               .Where(attr =>
-                                                   UserAttributes.NonProfileAttribute.Contains(attr))
-                                               .Select(user.GetNonProfileAttribute)) + " " +
-                                       string.Join(" ",
-                                           _attrs
-                                               .Where(attr =>
-                                                   !UserAttributes.NonProfileAttribute.Contains(attr))
-                                               .Select(attr => user.Profile[attr]?.ToString()));
+                                return user.PrintAttributesAsync(_attrs, OktaClient, _ofs).Result;
                             })
                             .FirstOrDefault()
                             .Result)

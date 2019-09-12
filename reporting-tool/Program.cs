@@ -31,6 +31,7 @@ namespace reporting_tool
 
             aCommand.AddOption(optionInputFile);
             aCommand.AddOption(optionAttrs);
+            aCommand.AddOption(optionOfs);
             root.AddCommand(aCommand);
 
             var bCommand = new Command("setAttribute", handler: CommandHandler.Create<string, FileInfo, string>(
