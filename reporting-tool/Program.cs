@@ -24,9 +24,9 @@ namespace reporting_tool
             var optionFilter = new Option("--filter", "filter expression", new Argument<string>());
 
             var aCommand = new Command("findCreator",
-                handler: CommandHandler.Create<FileInfo, string>((input, attrs) =>
+                handler: CommandHandler.Create<FileInfo, string, string>((input, attrs, ofs) =>
                 {
-                    new CreatorReport(oktaConfig, input, attrs).Run();
+                    new CreatorReport(oktaConfig, input, attrs, ofs).Run();
                 }));
 
             aCommand.AddOption(optionInputFile);
