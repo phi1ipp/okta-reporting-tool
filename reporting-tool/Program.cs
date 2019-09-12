@@ -43,6 +43,7 @@ namespace reporting_tool
             bCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
             bCommand.AddOption(new Option("--attrValue", "profile attribute value to be set", new Argument<string>()));
             bCommand.AddOption(optionInputFile);
+            bCommand.AddOption(optionOfs);
             root.AddCommand(bCommand);
 
             var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
