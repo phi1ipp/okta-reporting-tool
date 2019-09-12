@@ -19,7 +19,7 @@ namespace reporting_tool
         /// <param name="oktaClient">Okta Client</param>
         /// <param name="ofs">Output fields separator</param>
         /// <returns>String representing user attributes</returns>
-        public static async Task<string> PrintAttributes(this IUser user, IEnumerable<string> attributes,
+        public static async Task<string> PrintAttributesAsync(this IUser user, IEnumerable<string> attributes,
             IOktaClient oktaClient = null, string ofs = " ")
         {
             var enumerable = attributes.ToList();
