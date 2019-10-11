@@ -11,8 +11,9 @@ namespace reporting_tool
     public class GroupMembersReportWithUserFilter : OktaAction
     {
         private readonly string _grpName;
-        private readonly IEnumerable<string> _usrAttrs;
+        private readonly IEnumerable<string> _attrs;
         private readonly Func<IUser, bool> _filter;
+        private readonly string _ofs;
 
         /// <summary>
         /// Public constructor
@@ -22,13 +23,14 @@ namespace reporting_tool
         /// <param name="userFilter">not implemented yet</param>
         /// <param name="userAttrList">List of attributes to output for each user</param>
         public GroupMembersReportWithUserFilter(OktaConfig config, string grpName, string userFilter,
-            string userAttrList) : base(config)
+            string userAttrList, string ofs = ",") : base(config)
         {
             _grpName = grpName;
+            _ofs = ofs;
 
-            _usrAttrs = string.IsNullOrEmpty(userAttrList)
-            ? Enumerable.Empty<string>()
-            : userAttrList.Trim().Split(",");
+            _attrs = string.IsNullOrEmpty(userAttrList)
+                ? Enumerable.Empty<string>()
+                : userAttrList.Trim().Split(",");
 
             _filter = new UserFilter(userFilter).F;
         }
@@ -51,26 +53,13 @@ namespace reporting_tool
                 return;
             }
 
-            Console.WriteLine("id " +
-                              string.Join(" ",
-                                  _usrAttrs.Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))) + " " +
-                              string.Join(" ",
-                                  _usrAttrs.Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr)))
-            );
+            Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Where(user => _filter(user))
-                .ForEachAsync(user =>
-                    Console.WriteLine($"{user.Id} " +
-                                      string.Join(" ",
-                                          _usrAttrs
-                                              .Where(attr => UserAttributes.NonProfileAttribute.Contains(attr))
-                                              .Select(user.GetNonProfileAttribute)) + " " +
-                                      string.Join(" ",
-                                          _usrAttrs
-                                              .Where(attr => !UserAttributes.NonProfileAttribute.Contains(attr))
-                                              .Select(attr => user.Profile[attr]?.ToString()))))
+                .ForEachAsync(async user =>
+                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)))
                 .Wait();
         }
     }

@@ -52,16 +52,18 @@ namespace reporting_tool
             cCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
             cCommand.AddOption(new Option("--since", "select users created since specified date (YYYY-MM-DD format)",
                 new Argument<string>()));
+            cCommand.AddOption(optionOfs);
             root.AddCommand(cCommand);
 
             var groupMembershipWithFilter = new Command("groupMembership",
-                handler: CommandHandler.Create<string, string, string>(
-                    (grpName, filter, attrs) =>
-                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs)
+                handler: CommandHandler.Create<string, string, string, string>(
+                    (grpName, filter, attrs, ofs) =>
+                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs, ofs)
                             .Run()));
             groupMembershipWithFilter.AddOption(optionGroupName);
             groupMembershipWithFilter.AddOption(optionFilter);
             groupMembershipWithFilter.AddOption(optionAttrs);
+            groupMembershipWithFilter.AddOption(optionOfs);
             root.AddCommand(groupMembershipWithFilter);
 
             var eCommand = new Command("listApps",
