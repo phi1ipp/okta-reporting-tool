@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -51,10 +52,32 @@ namespace reporting_tool
                 ? OktaClient.Users.Where(user => _filter(user))
                 : OktaClient.Users.ListUsers(search: _search).Where(user => _filter(user));
 
-            userBase.ForEachAsync(async user =>
+            var channel = Channel.CreateUnbounded<IUser>();
+
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j => { await StartReader(channel); });
+            
+            userBase.ForEachAsync(user =>
             {
-                Console.WriteLine(await user.PrintAttributes(_attrs, OktaClient, _ofs));
+                channel.Writer.TryWrite(user);
             }).Wait();
+            
+            channel.Writer.Complete();
+
+            Task.WhenAll(readers).Wait();
+        }
+        
+        private async Task StartReader(Channel<IUser> channel)
+        {
+            var reader = channel.Reader;
+
+            while (await reader.WaitToReadAsync())
+            {
+                var user = await reader.ReadAsync();
+
+                Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+            }
         }
     }
 }

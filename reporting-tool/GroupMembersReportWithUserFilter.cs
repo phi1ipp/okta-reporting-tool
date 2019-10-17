@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Okta.Sdk;
 
 namespace reporting_tool
@@ -22,6 +24,7 @@ namespace reporting_tool
         /// <param name="grpName">Group name</param>
         /// <param name="userFilter">not implemented yet</param>
         /// <param name="userAttrList">List of attributes to output for each user</param>
+        /// <param name="ofs">Output field separator</param>
         public GroupMembersReportWithUserFilter(OktaConfig config, string grpName, string userFilter,
             string userAttrList, string ofs = ",") : base(config)
         {
@@ -53,14 +56,36 @@ namespace reporting_tool
                 return;
             }
 
+            var channel = Channel.CreateUnbounded<IUser>();
+
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j => { await StartReader(channel); });
+            
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Where(user => _filter(user))
-                .ForEachAsync(async user =>
-                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)))
+                .ForEachAsync(user =>
+                    channel.Writer.TryWrite(user))
                 .Wait();
+            
+            channel.Writer.Complete();
+
+            Task.WhenAll(readers).Wait();
+        }
+        
+        private async Task StartReader(Channel<IUser> channel)
+        {
+            var reader = channel.Reader;
+
+            while (await reader.WaitToReadAsync())
+            {
+                var user = await reader.ReadAsync();
+
+                Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+            }
         }
     }
 }

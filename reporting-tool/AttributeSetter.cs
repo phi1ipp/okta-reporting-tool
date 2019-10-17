@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Okta.Sdk;
 
 namespace reporting_tool
@@ -56,46 +58,68 @@ namespace reporting_tool
                     .Select(line => new List<string>(line.Trim().Split(" ", 2)))
                     .ToDictionary(lst => lst.First(), lst => _attrVal);
 
+            var channel = Channel.CreateUnbounded<Tuple<string, string>>();
+
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j => { await StartReader(channel); });
+
             uidToValue
                 .AsParallel()
                 .ForAll(pair =>
                 {
                     var (key, value) = pair;
-                    IUser oktaUser;
-
-                    try
-                    {
-                        oktaUser = OktaClient.Users.GetUserAsync(key).Result;
-                    }
-                    catch (Exception e)
-                    {
-                        if (e.InnerException is OktaApiException oktaApiException &&
-                            oktaApiException.Message.Contains("Not found"))
-                            Console.WriteLine($"{key} !!! user not found");
-                        else
-                        {
-                            Console.WriteLine($"{key} !!! exception fetching the user");
-                        }
-
-                        return;
-                    }
-
-                    oktaUser.Profile[_attrName] = value;
-
-                    try
-                    {
-                        oktaUser.UpdateAsync().Wait();
-
-                        Console.WriteLine(
-                            $"Updating user {key}: set attribute {_attrName} to {value} - success");
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(
-                            $"Updating user {key}: set attribute {_attrName} to {value} - update failed " +
-                            $"({e.Message})");
-                    }
+                    channel.Writer.TryWrite(new Tuple<string, string>(key, value));
                 });
+            
+            channel.Writer.Complete();
+
+            Task.WhenAll(readers).Wait();
+        }
+
+        private async Task StartReader(Channel<Tuple<string, string>> channel)
+        {
+            var reader = channel.Reader;
+
+            while (await reader.WaitToReadAsync())
+            {
+                var (uuid, value) = await reader.ReadAsync();
+
+                IUser oktaUser;
+
+                try
+                {
+                    oktaUser = OktaClient.Users.GetUserAsync(uuid).Result;
+                }
+                catch (Exception e)
+                {
+                    if (e.InnerException is OktaApiException oktaApiException &&
+                        oktaApiException.Message.Contains("Not found"))
+                        Console.WriteLine($"{uuid} !!! user not found");
+                    else
+                    {
+                        Console.WriteLine($"{uuid} !!! exception fetching the user");
+                    }
+
+                    break;
+                }
+
+                oktaUser.Profile[_attrName] = value;
+
+                try
+                {
+                    await oktaUser.UpdateAsync();
+
+                    Console.WriteLine(
+                        $"Updating user {uuid}: set attribute {_attrName} to {value} - success");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(
+                        $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
+                        $"({e.Message})");
+                }
+            }
         }
     }
 }
