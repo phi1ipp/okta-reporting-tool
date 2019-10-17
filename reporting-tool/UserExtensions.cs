@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,7 +40,16 @@ namespace reporting_tool
                         .Where(attr =>
                             !UserAttributes.NonProfileAttributes.Contains(attr) &&
                             !UserAttributes.GroupAttributes.Contains(attr))
-                        .Select(attr => user.Profile[attr]?.ToString()),
+                        .Select(attr =>
+                        {
+                            if (user.Profile[attr] is IEnumerable<object> coll)
+                            {
+                                var str = string.Join(',', coll.Select(val => val.ToString()));
+                                return $"({str})";
+                            }
+
+                            return user.Profile[attr]?.ToString();
+                        })
                 }
                 .Where(lst => lst.Any())
                 .SelectMany(x => x)

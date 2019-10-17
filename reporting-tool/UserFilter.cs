@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -90,10 +92,23 @@ namespace reporting_tool
 
             var (attrType, attrName) = GetAttributeInfo(context.children.First());
 
-            return user =>
-                attrType == "profile"
-                    ? user.Profile[attrName]?.ToString()?.Contains(attrVal) ?? false
-                    : user.GetNonProfileAttribute(attrName).Contains(attrVal);
+            switch (attrType)
+            {
+                case "profile":
+                    return user =>
+                    {
+                        if (user.Profile[attrName] is IEnumerable<object> coll)
+                        {
+                            return string.Join(',', coll.Select(val => val.ToString()))
+                                .Contains(attrVal);
+                        }
+                        else
+                        {
+                            return user.Profile[attrName]?.ToString().Contains(attrVal) ?? false;
+                        }
+                    };
+                default: return user => user.GetNonProfileAttribute(attrName).Contains(attrVal);
+            }
         }
 
         public override Func<IUser, bool> VisitParenthesisExp(BoolExprParser.ParenthesisExpContext context) =>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Antlr4.Runtime.Misc;
 using NSubstitute;
 using Okta.Sdk;
@@ -36,6 +37,30 @@ namespace TestBoolExpr
             var f = new UserFilter(expression).F;
             
             IUser user = new User(){Profile = new UserProfile{["LOA"] = "asdf3asdf"}};
+            
+            Assert.False(f(user));
+        }
+        
+        [Fact]
+        public void TestContainsArrayProfileAttributeTrue()
+        {
+            var expression = "profile.LOA co \"3\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User(){Profile = new UserProfile{["LOA"] = new List<string>{"asdf3asdf"}}};
+            
+            Assert.True(f(user));
+        }
+        
+        [Fact]
+        public void TestContainsArrayProfileAttributeFalse()
+        {
+            var expression = "profile.LOA co \"5\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User(){Profile = new UserProfile{["LOA"] = new List<string>{"asdf3asdf", "asdfkl2oi"}}};
             
             Assert.False(f(user));
         }
