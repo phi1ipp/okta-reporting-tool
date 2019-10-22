@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -52,10 +53,10 @@ namespace reporting_tool
             // if _attrVal is set -> override what comes from a source input
             var uidToValue = _attrVal == null
                 ? lines
-                    .Select(line => new List<string>(line.Trim().Split(" ", 2)))
-                    .ToDictionary(lst => lst.First(), lst => lst.Last().Replace("\"", ""))
+                    .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
+                    .ToDictionary(lst => lst.First(), lst => lst.Last())
                 : lines
-                    .Select(line => new List<string>(line.Trim().Split(" ", 2)))
+                    .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
                     .ToDictionary(lst => lst.First(), lst => _attrVal);
 
             var channel = Channel.CreateUnbounded<Tuple<string, string>>();
@@ -71,7 +72,7 @@ namespace reporting_tool
                     var (key, value) = pair;
                     channel.Writer.TryWrite(new Tuple<string, string>(key, value));
                 });
-            
+
             channel.Writer.Complete();
 
             Task.WhenAll(readers).Wait();
@@ -89,7 +90,7 @@ namespace reporting_tool
 
                 try
                 {
-                    oktaUser = OktaClient.Users.GetUserAsync(uuid).Result;
+                    oktaUser = await OktaClient.Users.GetUserAsync(uuid);
                 }
                 catch (Exception e)
                 {
@@ -104,7 +105,19 @@ namespace reporting_tool
                     break;
                 }
 
-                oktaUser.Profile[_attrName] = value;
+                // check if value is a list
+                if (Regex.IsMatch(value, "^\\([^)]*\\)$"))
+                {
+                    var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+                    var arrValues = regex.Split(value.Substring(1, value.Length - 2))
+                        .Select(val => val.Replace("\"", ""));
+
+                    oktaUser.Profile[_attrName] = arrValues;
+                }
+                else
+                {
+                    oktaUser.Profile[_attrName] = value.Replace("\"", "");
+                }
 
                 try
                 {
