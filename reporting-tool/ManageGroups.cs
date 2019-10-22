@@ -42,14 +42,13 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
-            var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-
             var channel = Channel.CreateUnbounded<Tuple<string, IEnumerable<string>>>();
 
             var readers =
                 Enumerable.Range(1, 8)
                     .Select(async j => { await StartReader(channel); });
 
+            var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
             lines
                 .AsParallel()
                 .ForAll(line =>
