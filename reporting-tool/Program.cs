@@ -67,7 +67,8 @@ namespace reporting_tool
             root.AddCommand(groupMembershipWithFilter);
 
             var eCommand = new Command("listApps",
-                handler: CommandHandler.Create(() => { new ApplicationList(oktaConfig).Run(); }));
+                handler: CommandHandler.Create<string>((ofs) => { new ApplicationList(oktaConfig, ofs).Run(); }));
+            eCommand.AddOption(optionOfs);
             root.AddCommand(eCommand);
 
             root.AddCommand(new Command("listGroups",

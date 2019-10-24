@@ -9,26 +9,21 @@ using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class ApplicationList
+    public class ApplicationList : OktaAction
     {
-        private OktaConfig _oktaConfig;
-
-        public ApplicationList(OktaConfig config)
+        private readonly string _ofs;
+        
+        public ApplicationList(OktaConfig config, string ofs = " ") : base(config)
         {
-            _oktaConfig = config;
+            _ofs = ofs;
         }
 
-        public void Run()
+        public override void Run()
         {
-            var oktaClient = new OktaClient(new OktaClientConfiguration
+            Console.WriteLine($"uuid,name,label");
+            OktaClient.Applications.ListApplications().ForEach(app =>
             {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
-
-            oktaClient.Applications.ListApplications().ForEach(app =>
-            {
-                Console.WriteLine($"uuid: {app.Id} name: {app.Name} label: {app.Label}");
+                Console.WriteLine($"{app.Id}{_ofs}{app.Name}{_ofs}{app.Label}");
             });
         }
     }
