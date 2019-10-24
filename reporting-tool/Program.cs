@@ -71,8 +71,10 @@ namespace reporting_tool
             eCommand.AddOption(optionOfs);
             root.AddCommand(eCommand);
 
-            root.AddCommand(new Command("listGroups",
-                handler: CommandHandler.Create(() => { new GroupList(oktaConfig).Run(); })));
+            var listGroups = new Command("listGroups",
+                handler: CommandHandler.Create<string>((ofs) => { new GroupList(oktaConfig, ofs).Run(); }));
+            listGroups.AddOption(optionOfs);
+            root.AddCommand(listGroups);
 
             var fCommand = new Command("userReport",
                 handler: CommandHandler.Create<FileInfo, string, string>((input, attrName, attrs) =>

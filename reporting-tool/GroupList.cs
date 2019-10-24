@@ -1,34 +1,36 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Okta.Sdk;
-using Okta.Sdk.Configuration;
 
 namespace reporting_tool
 {
-    public class GroupList
+    /// <summary>
+    /// Class to generate a report on all groups
+    /// </summary>
+    public class GroupList : OktaAction
     {
-        private OktaConfig _oktaConfig;
-
-        public GroupList(OktaConfig config)
+        private readonly string _ofs;
+        
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="config">OktaConfig instance</param>
+        /// <param name="ofs">Output field separator</param>
+        public GroupList(OktaConfig config, string ofs = " ") : base(config)
         {
-            _oktaConfig = config;
+            _ofs = ofs;
         }
 
-        public void Run()
+        /// <summary>
+        /// The report entry point
+        /// </summary>
+        public override void Run()
         {
-            var oktaClient = new OktaClient(new OktaClientConfiguration
+            Console.WriteLine($"uuid{_ofs}name");
+            OktaClient.Groups.ListGroups().ForEach(grp =>
             {
-                OktaDomain = _oktaConfig.Domain,
-                Token = _oktaConfig.ApiKey
-            });
-
-            oktaClient.Groups.ListGroups().ForEach(grp =>
-            {
-                Console.WriteLine($"uuid: {grp.Id} name: {grp.Profile.Name}");
+                Console.WriteLine(grp.Profile.Name.Contains(_ofs)
+                    ? $"{grp.Id}{_ofs}\"{grp.Profile.Name}\""
+                    : $"{grp.Id}{_ofs}{grp.Profile.Name}");
             });
         }
     }
