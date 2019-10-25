@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
+using YamlDotNet.Core.Events;
 
 namespace reporting_tool
 {
@@ -54,30 +56,42 @@ namespace reporting_tool
 
             var channel = Channel.CreateUnbounded<IUser>();
 
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j => { await StartReader(channel); });
-            
+            var processingThread = new Thread(StartReaders);
+            processingThread.Start(channel.Reader);
+
             userBase.ForEachAsync(user =>
             {
                 channel.Writer.TryWrite(user);
             }).Wait();
-            
+
             channel.Writer.Complete();
 
-            Task.WhenAll(readers).Wait();
-        }
-        
-        private async Task StartReader(Channel<IUser> channel)
-        {
-            var reader = channel.Reader;
-
-            while (await reader.WaitToReadAsync())
+            while (processingThread.IsAlive)
             {
-                var user = await reader.ReadAsync();
-
-                Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                Task.Delay(100).Wait(); 
             }
+        }
+
+        void StartReaders(object channelReader)
+        {
+            if (!(channelReader is ChannelReader<IUser> reader))
+            {
+                throw new Exception("Reader is null");
+            }
+            
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j =>
+                    {
+                        while (await reader.WaitToReadAsync())
+                        {
+                            var user = await reader.ReadAsync();
+
+                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                        }
+                    });
+
+            Task.WhenAll(readers).Wait();
         }
     }
 }
