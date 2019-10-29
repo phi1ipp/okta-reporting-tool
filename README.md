@@ -108,3 +108,20 @@ It accepts the following switches:
 -- attrs  <csv_of_user_attributes>
 ```
 
+### setAttribute
+This action is to set value(s) for a particular attribute for given user(s). Each user can be assigned its own value, or all of the users can be assigned the same value. Input may come from a standard input or a file, which structure should match the following:
+```
+guid_1,value1
+guid_2,value2
+```
+
+Examples:
+* `./reporting-tool setAttribute --attrName LOA --attrValue "3" --input /tmp/loa` will set all users LOA, whose GUIDs are listed in `/tmp/loa`, to "3"
+* `./reporting-tool setAttribute --attrName LOA --input /tmp/loa` will set all users LOA to value listed in the second column in `/tmp/loa`
+* `cut -f1 -d, /tmp/loa | ./reporting-tool setAttribute --attrName LOA --attrValue "3"` similar to the first example, just to demonstrate that the input may be a standard input
+
+```
+-- input     <file_name>
+-- attrName  <user_profile_attribute_name>
+-- attrValue <value_to_assign_to_all_given_users> (optional)
+```
