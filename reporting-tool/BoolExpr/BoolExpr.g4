@@ -10,6 +10,7 @@ expr : '(' expr')'      #parenthesisExp
     
 attr_comp : attr 'eq' STR       #eqCompare
             | attr 'co' STR     #coCompare
+            | attr 'sw' STR     #swCompare
             ;
             
 attr_pr   : attr 'pr' ;

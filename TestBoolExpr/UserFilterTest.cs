@@ -66,6 +66,34 @@ namespace TestBoolExpr
         }
         
         [Fact]
+        public void TestStartsWithProfileAttributeTrue()
+        {
+            var expression = "profile.SourceType sw \"ei\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User();
+            var userProfile = new UserProfile {["SourceType"] = "eidm"};
+            user.Profile = userProfile;
+            
+            Assert.True(f(user));
+        }
+        
+        [Fact]
+        public void TestStartsWithProfileAttributeFalse()
+        {
+            var expression = "profile.SourceType sw \"ei\"";
+
+            var f = new UserFilter(expression).F;
+            
+            IUser user = new User();
+            var userProfile = new UserProfile {["SourceType"] = "HARP"};
+            user.Profile = userProfile;
+            
+            Assert.False(f(user));
+        }
+        
+        [Fact]
         public void TestEqualProfileAttribute()
         {
             var expression = "profile.LOA eq \"3\"";
