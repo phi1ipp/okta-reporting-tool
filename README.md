@@ -60,7 +60,7 @@ The tool supports conditional expressions based on a built-in grammatic.
 ```
 grammar BoolExpr;
 
-expr : '(' expr')'      #parenthesisExp 
+expr : '(' expr ')'     #parenthesisExp 
     | expr 'and' expr   #andExp
     | expr 'or' expr    #orExp
     | 'not' expr        #notExp
@@ -102,9 +102,9 @@ on a client side. Due to Okta API limitation, you can't use `--search` if your r
 
 It accepts the following switches:
 ```
--- input <file_name> 
+-- input  <file_name> 
 -- filter <filter_expression>
 -- search <filter_expression>
--- attrs <csv_of_user_attributes>
+-- attrs  <csv_of_user_attributes>
 ```
 
