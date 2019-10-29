@@ -1,6 +1,7 @@
 # okta-reporting-tool
 It's a command line tool to help with Okta data manipulation activities. If your organization doesn't have/want to use LDAP interface for these purposes, you can harness this tool. 
 
+**Currently the repository doesn't have all the components/steps required to build the tool (modified Okta Sdk to throttle request frequency)**
 ## Usage
 ```
 $ ./reporting-tool.exe
