@@ -23,6 +23,19 @@ Commands:
  activateUsers
  manageGroups
 ```
+### Configuration
+All the configuration is held in `appsettings.json` file, which includes the following section:
+```
+    ...,
+    "Okta": {
+        "Domain": "https://your_okta_domain_url",
+        "RateLimiPreservationPct": 50,
+        "ApiKey": "your okta api key"
+    }
+```
+`RateLimitPreservationPct` represents a percentage of an Okta's endpoint [rate limit](https://developer.okta.com/docs/reference/rate-limits/) 
+which has to be preserved while running the tool. 
+
 ### General comments
 In general the tool can accept its input from a standart input, so that you can use piping from external utils as its input. 
 Otherwise you can use file as an input source.
