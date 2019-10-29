@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Okta.Sdk;
 
 namespace reporting_tool
@@ -11,7 +12,11 @@ namespace reporting_tool
         /// <summary>
         /// Collection of non-profile attributes available for reporting and operations
         /// </summary>
-        public static ICollection<string> NonProfileAttribute => new List<string> {"status", "id", "created"};
+        public static ICollection<string> NonProfileAttributes => new List<string> {"status", "id", "created"};
+        /// <summary>
+        /// Collection of group attributes which user is a member of
+        /// </summary>
+        public static ICollection<string> GroupAttributes => new List<string> {"grp.Name"};
 
     }
 

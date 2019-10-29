@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -11,10 +9,20 @@ using Okta.Sdk;
 
 namespace reporting_tool
 {
+    /// <summary>
+    /// Class representing a filter of user entries for reports
+    /// </summary>
     public class UserFilter
     {
+        /// <summary>
+        /// Filtering function composed
+        /// </summary>
         public Func<IUser, bool> F { get; }
 
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        /// <param name="expression">String representing a conditional expression</param>
         public UserFilter(string expression)
         {
             if (string.IsNullOrEmpty(expression))
@@ -84,6 +92,18 @@ namespace reporting_tool
                 attrType == "profile"
                     ? user.Profile[attrName]?.ToString() == attrVal
                     : user.GetNonProfileAttribute(attrName) == attrVal;
+        }
+
+        public override Func<IUser, bool> VisitSwCompare(BoolExprParser.SwCompareContext context)
+        {
+            var attrVal = context.children.Last().GetText().Trim('"');
+
+            var (attrType, attrName) = GetAttributeInfo(context.children.First());
+
+            return user =>
+                attrType == "profile"
+                    ? (user.Profile[attrName] != null && user.Profile[attrName].ToString().StartsWith(attrVal))
+                    : user.GetNonProfileAttribute(attrName).StartsWith(attrVal);
         }
 
         public override Func<IUser, bool> VisitCoCompare(BoolExprParser.CoCompareContext context)

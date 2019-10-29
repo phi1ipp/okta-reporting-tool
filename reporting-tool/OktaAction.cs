@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
+using reporting_tool.Infra;
 
 namespace reporting_tool
 {
@@ -38,7 +38,7 @@ namespace reporting_tool
             },
             new HttpClient(),
             null,
-            new DefaultRetryStrategy(OktaClientConfiguration.DefaultMaxRetries,
+            new ExceptionRetryStrategy(OktaClientConfiguration.DefaultMaxRetries,
                 OktaClientConfiguration.DefaultRequestTimeout)
         );
 
@@ -47,7 +47,7 @@ namespace reporting_tool
         /// </summary>
         public abstract void Run();
 
-        private string PromptAndReadToken()
+        private static string PromptAndReadToken()
         {
             var token = "";
             Console.WriteLine("Enter token: ");
