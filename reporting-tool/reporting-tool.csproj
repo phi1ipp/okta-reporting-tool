@@ -16,11 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="BoolExpr\SyntaxAnalyzer.cs" />
-    <Compile Remove="BoolExpr\Tokenizer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="BoolExpr" />
   </ItemGroup>
 </Project>
