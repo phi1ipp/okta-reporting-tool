@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -58,9 +59,8 @@ namespace reporting_tool
 
             var channel = Channel.CreateUnbounded<IUser>();
 
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j => { await StartReader(channel); });
+            var processingThread = new Thread(StartReaders);
+            processingThread.Start(channel.Reader);
             
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
@@ -72,20 +72,33 @@ namespace reporting_tool
                 .Wait();
             
             channel.Writer.Complete();
-
-            Task.WhenAll(readers).Wait();
+            
+            while (processingThread.IsAlive)
+            {
+                Task.Delay(100).Wait(); 
+            }
         }
         
-        private async Task StartReader(Channel<IUser> channel)
+        void StartReaders(object channelReader)
         {
-            var reader = channel.Reader;
-
-            while (await reader.WaitToReadAsync())
+            if (!(channelReader is ChannelReader<IUser> reader))
             {
-                var user = await reader.ReadAsync();
-
-                Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                throw new Exception("Reader is null");
             }
+            
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j =>
+                    {
+                        while (await reader.WaitToReadAsync())
+                        {
+                            var user = await reader.ReadAsync();
+
+                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                        }
+                    });
+
+            Task.WhenAll(readers).Wait();
         }
     }
 }
