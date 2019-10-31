@@ -12,7 +12,7 @@ namespace reporting_tool
         /// <summary>
         /// Collection of non-profile attributes available for reporting and operations
         /// </summary>
-        public static ICollection<string> NonProfileAttributes => new List<string> {"status", "id", "created"};
+        public static ICollection<string> NonProfileAttributes => new List<string> {"status", "id", "created", "passwordChanged"};
         /// <summary>
         /// Collection of group attributes which user is a member of
         /// </summary>
@@ -38,6 +38,7 @@ namespace reporting_tool
                 case "status" : return user.Status;
                 case "id" : return user.Id;
                 case "created" : return $"{user.Created:yyyy/MM/dd}";
+                case "passwordChanged" : return $"{user.PasswordChanged:yyyy/MM/dd}";
                 default : return "";
             }
         }
