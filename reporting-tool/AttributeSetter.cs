@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -61,9 +62,8 @@ namespace reporting_tool
 
             var channel = Channel.CreateUnbounded<Tuple<string, string>>();
 
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j => { await StartReader(channel); });
+            var processingThread = new Thread(StartReaders);
+            processingThread.Start(channel.Reader);
 
             uidToValue
                 .AsParallel()
@@ -75,64 +75,78 @@ namespace reporting_tool
 
             channel.Writer.Complete();
 
-            Task.WhenAll(readers).Wait();
+            while (processingThread.IsAlive)
+            {
+                Task.Delay(100).Wait(); 
+            }
         }
 
-        private async Task StartReader(Channel<Tuple<string, string>> channel)
+        void StartReaders(object channelReader)
         {
-            var reader = channel.Reader;
-
-            while (await reader.WaitToReadAsync())
+            if (!(channelReader is ChannelReader<Tuple<string, string>> reader))
             {
-                var (uuid, value) = await reader.ReadAsync();
-
-                IUser oktaUser;
-
-                try
-                {
-                    oktaUser = await OktaClient.Users.GetUserAsync(uuid);
-                }
-                catch (Exception e)
-                {
-                    if (e.InnerException is OktaApiException oktaApiException &&
-                        oktaApiException.Message.Contains("Not found"))
-                        Console.WriteLine($"{uuid} !!! user not found");
-                    else
-                    {
-                        Console.WriteLine($"{uuid} !!! exception fetching the user");
-                    }
-
-                    break;
-                }
-
-                // check if value is a list
-                if (Regex.IsMatch(value, "^\\([^)]*\\)$"))
-                {
-                    var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                    var arrValues = regex.Split(value.Substring(1, value.Length - 2))
-                        .Select(val => val.Replace("\"", ""));
-
-                    oktaUser.Profile[_attrName] = arrValues;
-                }
-                else
-                {
-                    oktaUser.Profile[_attrName] = value.Replace("\"", "");
-                }
-
-                try
-                {
-                    await oktaUser.UpdateAsync();
-
-                    Console.WriteLine(
-                        $"Updating user {uuid}: set attribute {_attrName} to {value} - success");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(
-                        $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
-                        $"({e.Message})");
-                }
+                throw new Exception("Reader is null");
             }
+
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j =>
+                        {
+                            while (await reader.WaitToReadAsync())
+                            {
+                                var (uuid, value) = await reader.ReadAsync();
+
+                                IUser oktaUser;
+
+                                try
+                                {
+                                    oktaUser = await OktaClient.Users.GetUserAsync(uuid);
+                                }
+                                catch (Exception e)
+                                {
+                                    if (e.InnerException is OktaApiException oktaApiException &&
+                                        oktaApiException.Message.Contains("Not found"))
+                                        Console.WriteLine($"{uuid} !!! user not found");
+                                    else
+                                    {
+                                        Console.WriteLine($"{uuid} !!! exception fetching the user");
+                                    }
+
+                                    continue;
+                                }
+
+                                // check if value is a list
+                                if (Regex.IsMatch(value, "^\\([^)]*\\)$"))
+                                {
+                                    var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+                                    var arrValues = regex.Split(value.Substring(1, value.Length - 2))
+                                        .Select(val => val.Replace("\"", ""));
+
+                                    oktaUser.Profile[_attrName] = arrValues;
+                                }
+                                else
+                                {
+                                    oktaUser.Profile[_attrName] = value.Replace("\"", "");
+                                }
+
+                                try
+                                {
+                                    await oktaUser.UpdateAsync();
+
+                                    Console.WriteLine(
+                                        $"Updating user {uuid}: set attribute {_attrName} to {value} - success");
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(
+                                        $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
+                                        $"({e.Message})");
+                                }
+                            }
+                        }
+                    );
+
+            Task.WhenAll(readers).Wait();
         }
     }
 }
