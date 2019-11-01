@@ -78,8 +78,8 @@ namespace reporting_tool
                 Task.Delay(100).Wait(); 
             }
         }
-        
-        void StartReaders(object channelReader)
+
+        private void StartReaders(object channelReader)
         {
             if (!(channelReader is ChannelReader<IUser> reader))
             {
