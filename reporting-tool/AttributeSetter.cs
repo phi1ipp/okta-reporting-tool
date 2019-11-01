@@ -81,7 +81,7 @@ namespace reporting_tool
             }
         }
 
-        void StartReaders(object channelReader)
+        private void StartReaders(object channelReader)
         {
             if (!(channelReader is ChannelReader<Tuple<string, string>> reader))
             {
