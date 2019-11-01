@@ -94,6 +94,16 @@ It accepts the following switches:
 -- attrs <csv_of_creator_attributes>
 ```
 
+### userReport
+This report can be used when you have a list of user UUIDs/logins for whom you want to pull information out of Okta 
+(one id per line). It can be provided either with `--input <file_name>` or through standard input.
+
+It accepts the following switches:
+```
+-- input  <file_name> 
+-- attrs  <csv_of_user_attributes>
+```
+
 ### userSearchReport
 This report can be used when you have a condition according to which users should be pull out of Okta. Usually switch `--search` is preferable 
 over `--filter`, because the former one makes search happening on Okta's side (by Okta engine), while the latter one performs filtering 
