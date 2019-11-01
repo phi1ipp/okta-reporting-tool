@@ -135,3 +135,9 @@ Examples:
 -- attrName  <user_profile_attribute_name>
 -- attrValue <value_to_assign_to_all_given_users> (optional)
 ```
+
+### listGroups
+It's a basic report to extract all groups from Okta with their UUID and name
+
+### listApps
+It's a basic report to extract all applications from Okta with their UUID, name and display name
