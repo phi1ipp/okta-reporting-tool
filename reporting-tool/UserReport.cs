@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -53,63 +54,77 @@ namespace reporting_tool
 
             var channel = Channel.CreateUnbounded<string>();
 
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j => { await StartReader(channel); });
-            
+            var processingThread = new Thread(StartReaders);
+            processingThread.Start(channel.Reader);
+
             lines
                 .AsParallel()
                 .ForAll(line =>
                 {
-                    var userName = line.Trim().Split(' ',',').First();
+                    var userName = line.Trim().Split(' ', ',').First();
                     channel.Writer.TryWrite(userName);
                 });
-            
+
             channel.Writer.Complete();
 
-            Task.WhenAll(readers).Wait();
-        }
-        
-        private async Task StartReader(Channel<string> channel)
-        {
-            var reader = channel.Reader;
-
-            while (await reader.WaitToReadAsync())
+            while (processingThread.IsAlive)
             {
-                var userName = await reader.ReadAsync();
-
-                    try
-                    {
-                        var users = string.IsNullOrWhiteSpace(_attrName)
-                            ? new List<IUser> {await OktaClient.Users.GetUserAsync(userName)}
-                            : await OktaClient.Users.ListUsers(search: $"profile.{_attrName} eq \"{userName}\"")
-                                .ToList();
-
-                        if (users.Count == 0)
-                        {
-                            Console.WriteLine(userName + " !!!!! user not found");
-                            continue;
-                        }
-
-                        users.ForEach(async user =>
-                        {
-                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        if (e.InnerException is OktaApiException oktaException &&
-                            oktaException.Message.StartsWith("Not found:"))
-                        {
-                            Console.WriteLine(userName + " !!!!! user not found");
-                        }
-                        else
-                        {
-                            Console.WriteLine(userName + " !!!!! exception processing the user");
-                            Console.WriteLine(e);
-                        }
-                    }
+                Task.Delay(100).Wait(); 
             }
+        }
+
+        void StartReaders(object channelReader)
+        {
+            if (!(channelReader is ChannelReader<string> reader))
+            {
+                throw new Exception("Reader is null");
+            }
+
+            var readers =
+                Enumerable.Range(1, 8)
+                    .Select(async j =>
+                    {
+                        while (await reader.WaitToReadAsync())
+                        {
+                            var userName = await reader.ReadAsync();
+
+                            try
+                            {
+                                var users = string.IsNullOrWhiteSpace(_attrName)
+                                    ? new List<IUser> {await OktaClient.Users.GetUserAsync(userName)}
+                                    : await OktaClient.Users.ListUsers(search: $"profile.{_attrName} eq \"{userName}\"")
+                                        .ToList();
+
+                                if (users.Count == 0)
+                                {
+                                    Console.WriteLine(userName + " !!!!! user not found");
+                                    continue;
+                                }
+
+                                var tasks = users.Select(async user =>
+                                {
+                                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                                });
+
+                                await Task.WhenAll(tasks);
+                            }
+                            catch (Exception e)
+                            {
+                                if (e.InnerException is OktaApiException oktaException &&
+                                    oktaException.Message.StartsWith("Not found:"))
+                                {
+                                    Console.WriteLine(userName + " !!!!! user not found");
+                                }
+                                else
+                                {
+                                    Console.WriteLine(userName + " !!!!! exception processing the user");
+                                    Console.WriteLine(e);
+                                }
+                            }
+                        }
+                    });
+
+            Task.WhenAll(readers).Wait();
         }
     }
 }
