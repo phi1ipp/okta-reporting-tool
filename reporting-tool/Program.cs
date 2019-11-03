@@ -71,6 +71,16 @@ namespace reporting_tool
             eCommand.AddOption(optionOfs);
             root.AddCommand(eCommand);
 
+            var appAssignmentCmd = new Command("appUser",
+                handler: CommandHandler.Create<string, FileInfo, string>((appLabel, input, ofs) =>
+                {
+                    new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
+                }));
+            appAssignmentCmd.AddOption(optionOfs);
+            appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
+            appAssignmentCmd.AddOption(optionInputFile);
+            root.AddCommand(appAssignmentCmd);
+
             var listGroups = new Command("listGroups",
                 handler: CommandHandler.Create<string>((ofs) => { new GroupList(oktaConfig, ofs).Run(); }));
             listGroups.AddOption(optionOfs);

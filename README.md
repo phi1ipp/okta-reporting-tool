@@ -141,3 +141,11 @@ It's a basic report to extract all groups from Okta with their UUID and name
 
 ### listApps
 It's a basic report to extract all applications from Okta with their UUID, name and display name
+
+### appUser
+This report allows to find if users are assigned to an application specified by `--appLabel` and display their application username.
+
+```
+-- input     <file_name with user_ids>
+-- appLabel  <application label>
+```
