@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,11 +23,6 @@ namespace reporting_tool
             IOktaClient oktaClient = null, string ofs = " ")
         {
             var enumerable = attributes.ToList();
-
-            if (enumerable.Any(attr => UserAttributes.GroupAttributes.Contains(attr)) && oktaClient == null)
-            {
-                throw new Exception("Can't get group attributes without an instance of Okta Client");
-            }
 
             var values = new[]
                 {
@@ -55,14 +49,19 @@ namespace reporting_tool
                 .SelectMany(x => x)
                 .Select(attr => !string.IsNullOrEmpty(attr) && attr.Contains(ofs) ? $"\"{attr}\"" : attr);
 
-            if (enumerable.Any(a => UserAttributes.GroupAttributes.Contains(a)))
-                values = values.Concat(new[]
-                {
-                    await oktaClient.Users
-                        .ListUserGroups(user.Id)
-                        .Select(grp => $"({grp.Profile.Name})")
-                        .Aggregate(string.Concat)
-                });
+            if (!enumerable.Any(a => UserAttributes.GroupAttributes.Contains(a))) return string.Join(ofs, values);
+
+            if (oktaClient == null)
+            {
+                throw new Exception("Can't get group attributes without an instance of Okta Client");
+            }
+
+            //todo Name hardcoded as the only supported attribute for now
+            values = values.Concat(new[] { await oktaClient.Users
+                .ListUserGroups(user.Id)
+                .Select(grp =>
+                    $"({grp.Profile.Name})")
+                .Aggregate(string.Concat) });
 
             return string.Join(ofs, values);
         }
