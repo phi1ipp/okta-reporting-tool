@@ -17,6 +17,7 @@ Commands:
  emptyAttribute
  groupMembership
  listApps
+ appUser
  listGroups
  userReport
  userSearchReport
