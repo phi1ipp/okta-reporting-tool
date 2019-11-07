@@ -22,15 +22,15 @@ namespace reporting_tool
         public static async Task<string> PrintAttributesAsync(this IUser user, IEnumerable<string> attributes,
             IOktaClient oktaClient = null, string ofs = " ")
         {
-            var enumerable = attributes.ToList();
+            var attrList = attributes.ToList();
 
             var values = new[]
                 {
                     new[] {$"{user.Id}"},
-                    enumerable
+                    attrList
                         .Where(attr => UserAttributes.NonProfileAttributes.Contains(attr))
                         .Select(user.GetNonProfileAttribute),
-                    enumerable
+                    attrList
                         .Where(attr =>
                             !UserAttributes.NonProfileAttributes.Contains(attr) &&
                             !UserAttributes.GroupAttributes.Contains(attr))
@@ -49,7 +49,7 @@ namespace reporting_tool
                 .SelectMany(x => x)
                 .Select(attr => !string.IsNullOrEmpty(attr) && attr.Contains(ofs) ? $"\"{attr}\"" : attr);
 
-            if (!enumerable.Any(a => UserAttributes.GroupAttributes.Contains(a))) return string.Join(ofs, values);
+            if (!attrList.Any(a => UserAttributes.GroupAttributes.Contains(a))) return string.Join(ofs, values);
 
             if (oktaClient == null)
             {
@@ -74,17 +74,17 @@ namespace reporting_tool
         /// <returns>String representing header row</returns>
         public static string PrintUserAttributesHeader(IEnumerable<string> attributes, string ofs = " ")
         {
-            var enumerable = attributes.ToList();
+            var attrList = attributes.ToList();
 
             return string.Join(ofs,
                 new[]
                     {
                         new[] {"id"},
-                        enumerable.Where(attr => UserAttributes.NonProfileAttributes.Contains(attr)),
-                        enumerable.Where(attr =>
+                        attrList.Where(attr => UserAttributes.NonProfileAttributes.Contains(attr)),
+                        attrList.Where(attr =>
                             !UserAttributes.NonProfileAttributes.Contains(attr) &&
                             !UserAttributes.GroupAttributes.Contains(attr)),
-                        enumerable.Where(attr => UserAttributes.GroupAttributes.Contains(attr))
+                        attrList.Where(attr => UserAttributes.GroupAttributes.Contains(attr))
                     }.Where(en => en.Any())
                     .SelectMany(x => x));
         }
