@@ -77,7 +77,7 @@ namespace reporting_tool
 
             while (processingThread.IsAlive)
             {
-                Task.Delay(100).Wait(); 
+                Task.Delay(100).Wait();
             }
         }
 
@@ -94,12 +94,13 @@ namespace reporting_tool
                         {
                             while (await reader.WaitToReadAsync())
                             {
-                                var (uuid, value) = await reader.ReadAsync();
-
                                 IUser oktaUser;
+                                var uuid = "";
+                                var value = "";
 
                                 try
                                 {
+                                    (uuid, value) = await reader.ReadAsync();
                                     oktaUser = await OktaClient.Users.GetUserAsync(uuid);
                                 }
                                 catch (Exception e)
@@ -107,7 +108,7 @@ namespace reporting_tool
                                     if (e.InnerException is OktaApiException oktaApiException &&
                                         oktaApiException.Message.Contains("Not found"))
                                         Console.WriteLine($"{uuid} !!! user not found");
-                                    else
+                                    else if (!(e is ChannelClosedException))
                                     {
                                         Console.WriteLine($"{uuid} !!! exception fetching the user");
                                     }
