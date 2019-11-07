@@ -54,8 +54,7 @@ namespace reporting_tool
 
             var channel = Channel.CreateUnbounded<string>();
 
-            var processingThread = new Thread(StartReaders);
-            processingThread.Start(channel.Reader);
+            var readingTask = Task.Run(() => StartReaders(channel.Reader));
 
             lines
                 .AsParallel()
@@ -65,12 +64,8 @@ namespace reporting_tool
                     channel.Writer.TryWrite(userName);
                 });
 
-            channel.Writer.Complete();
-
-            while (processingThread.IsAlive)
-            {
-                Task.Delay(100).Wait(); 
-            }
+            channel.Writer.TryComplete();
+            readingTask.Wait();
         }
 
         void StartReaders(object channelReader)
@@ -86,10 +81,12 @@ namespace reporting_tool
                     {
                         while (await reader.WaitToReadAsync())
                         {
-                            var userName = await reader.ReadAsync();
-
+                            var userName = "";
+                            
                             try
                             {
+                                userName = await reader.ReadAsync();
+
                                 var users = string.IsNullOrWhiteSpace(_attrName)
                                     ? new List<IUser> {await OktaClient.Users.GetUserAsync(userName)}
                                     : await OktaClient.Users.ListUsers(search: $"profile.{_attrName} eq \"{userName}\"")
@@ -115,7 +112,7 @@ namespace reporting_tool
                                 {
                                     Console.WriteLine(userName + " !!!!! user not found");
                                 }
-                                else
+                                else if (!(e is ChannelClosedException))
                                 {
                                     Console.WriteLine(userName + " !!!!! exception processing the user");
                                     Console.WriteLine(e);
