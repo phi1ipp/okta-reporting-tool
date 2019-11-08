@@ -96,23 +96,28 @@ namespace reporting_tool
                             {
                                 IUser oktaUser;
                                 var uuid = "";
-                                var value = "";
+                                string value;
 
                                 try
                                 {
                                     (uuid, value) = await reader.ReadAsync();
                                     oktaUser = await OktaClient.Users.GetUserAsync(uuid);
                                 }
+                                catch (OktaApiException e)
+                                {
+                                    Console.WriteLine(e.Message.Contains("Not found")
+                                        ? $"{uuid} !!! user not found"
+                                        : $"{uuid} !!! exception fetching the user: {e.Message}");
+
+                                    continue;
+                                }
+                                catch (ChannelClosedException)
+                                {
+                                    break;
+                                }
                                 catch (Exception e)
                                 {
-                                    if (e.InnerException is OktaApiException oktaApiException &&
-                                        oktaApiException.Message.Contains("Not found"))
-                                        Console.WriteLine($"{uuid} !!! user not found");
-                                    else if (!(e is ChannelClosedException))
-                                    {
-                                        Console.WriteLine($"{uuid} !!! exception fetching the user");
-                                    }
-
+                                    Console.WriteLine($"{uuid} !!! exception fetching the user: {e.Message}");
                                     continue;
                                 }
 
