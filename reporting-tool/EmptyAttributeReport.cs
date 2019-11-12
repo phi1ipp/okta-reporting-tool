@@ -44,7 +44,7 @@ namespace reporting_tool
 
                     return $"{u.Id} {string.Join(',', lstGroups)}";
                 })
-                .ForEachAsync(async str => Console.WriteLine(await str));
+                .ForEachAsync(Console.WriteLine);
         }
     }
 }
