@@ -113,7 +113,7 @@ namespace reporting_tool
                             {
                                 Console.WriteLine(
                                     $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
-                                    $"({e.Message})");
+                                    $"({e})");
                             }
                         }
                         finally
