@@ -15,8 +15,10 @@ namespace reporting_tool
     public class AttributeSetter : OktaAction
     {
         private readonly FileInfo _fileInfo;
-        private readonly string _attrName;
-        private readonly string _attrVal;
+        private readonly IEnumerable<string> _attrNames;
+        private readonly IEnumerable<string> _attrValues;
+
+        private static readonly Regex Regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 
         /// <inheritdoc />
         /// <summary>
@@ -33,10 +35,15 @@ namespace reporting_tool
             if (string.IsNullOrWhiteSpace(attrName))
                 throw new InvalidOperationException("Required parameter --attrName is missing");
 
-            _attrName = attrName;
+            _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            if (!string.IsNullOrWhiteSpace(attrValue))
-                _attrVal = attrValue;
+            if (string.IsNullOrWhiteSpace(attrValue)) return;
+
+            _attrValues = Regex.Split(attrValue);
+            if (_attrValues.Count() < _attrNames.Count())
+            {
+                throw new Exception("List of values provided less than the number of fields to populate");
+            }
         }
 
         /// <inheritdoc />
@@ -51,20 +58,20 @@ namespace reporting_tool
 
             // produce map of uid -> attrValue
             // if _attrVal is set -> override what comes from a source input
-            var uidToValue = _attrVal == null
+            var uidToValue = _attrValues == null
                 ? lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
-                    .ToDictionary(lst => lst.First(), lst => lst.Last())
+                    .ToDictionary(lst => lst.First(), lst => Regex.Split(lst.Last()) as IEnumerable<string>)
                 : lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
-                    .ToDictionary(lst => lst.First(), lst => _attrVal);
+                    .ToDictionary(lst => lst.First(), lst => _attrValues);
 
             var semaphore = new SemaphoreSlim(8);
             var tasks =
                 uidToValue.Select(
                     async pair =>
                     {
-                        var (uuid, value) = pair;
+                        var (uuid, values) = pair;
 
                         await semaphore.WaitAsync();
                         try
@@ -88,31 +95,36 @@ namespace reporting_tool
                                 return;
                             }
 
-                            // check if value is a list
-                            if (Regex.IsMatch(value, "^\\([^)]*\\)$"))
-                            {
-                                var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                                var arrValues = regex.Split(value.Substring(1, value.Length - 2))
-                                    .Select(val => val.Replace("\"", ""));
+                            _attrNames.Zip(_attrValues).AsParallel().ForAll(
+                                (nameValPair) =>
+                                {
+                                    var (attrName, attrVal) = nameValPair;
+                                    // check if value is a list
+                                    if (Regex.IsMatch(attrVal, "^\\([^)]*\\)$"))
+                                    {
+                                        var arrValues =
+                                            Regex.Split(attrVal.Substring(1, attrVal.Length - 2))
+                                                .Select(val => val.Replace("\"", ""));
 
-                                oktaUser.Profile[_attrName] = arrValues;
-                            }
-                            else
-                            {
-                                oktaUser.Profile[_attrName] = value.Replace("\"", "");
-                            }
+                                        oktaUser.Profile[attrName] = arrValues;
+                                    }
+                                    else
+                                    {
+                                        oktaUser.Profile[attrName] = attrVal.Replace("\"", "");
+                                    }
+                                });
 
                             try
                             {
                                 await oktaUser.UpdateAsync();
 
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrName} to {value} - success");
+                                    $"Updating user {uuid}: set attribute {_attrNames} to {values} - success");
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
+                                    $"Updating user {uuid}: set attribute {_attrNames} to {values} - update failed " +
                                     $"({e})");
                             }
                         }
