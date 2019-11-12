@@ -60,16 +60,14 @@ namespace reporting_tool
                     .ToDictionary(lst => lst.First(), lst => _attrVal);
 
             var semaphore = new SemaphoreSlim(8);
-            var tasks = new List<Task>();
+            var tasks =
+                uidToValue.Select(
+                    async pair =>
+                    {
+                        var (uuid, value) = pair;
 
-            foreach (var (uuid, value) in uidToValue)
-            {
-                try
-                {
-                    await semaphore.WaitAsync();
-                    
-                    tasks.Add(
-                        Task.Run(async () =>
+                        await semaphore.WaitAsync();
+                        try
                         {
                             IUser oktaUser;
 
@@ -117,14 +115,12 @@ namespace reporting_tool
                                     $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
                                     $"({e.Message})");
                             }
-                        }));
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            }
-
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    });
             await Task.WhenAll(tasks);
         }
     }
