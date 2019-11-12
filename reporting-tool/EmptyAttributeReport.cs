@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace reporting_tool
 {
@@ -28,23 +29,22 @@ namespace reporting_tool
         /// <summary>
         /// Report execution entry point
         /// </summary>
-        public override void Run()
+        public override Task Run()
         {
-            OktaClient.Users
+            return OktaClient.Users
                 .ListUsers(search: $"created gt \"{_since:yyyy-MM-ddT00:00:00.000Z}\"")
                 .Where(u => string.IsNullOrEmpty(u.Profile[_attrName]?.ToString()))
                 .Select(async u =>
-                    {
+                {
 
-                        var lstGroups = await OktaClient.Users
-                            .ListUserGroups(u.Id)
-                            .Select(gr => gr.Profile.Name)
-                            .ToList();
-                        
-                        return $"{u.Id} {string.Join(',', lstGroups)}";
-                    })
-                .ForEachAsync(async str => Console.WriteLine(await str))
-                .Wait();
+                    var lstGroups = await OktaClient.Users
+                        .ListUserGroups(u.Id)
+                        .Select(gr => gr.Profile.Name)
+                        .ToList();
+
+                    return $"{u.Id} {string.Join(',', lstGroups)}";
+                })
+                .ForEachAsync(async str => Console.WriteLine(await str));
         }
     }
 }

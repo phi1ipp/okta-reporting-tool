@@ -36,7 +36,7 @@ namespace reporting_tool
         /// <summary>
         /// Main executable method to execute management operations
         /// </summary>
-        public override void Run()
+        public override async Task Run()
         {
             var lines = _fileInfo == null
                 ? Program.ReadConsoleLines()
@@ -63,7 +63,7 @@ namespace reporting_tool
                 });
             channel.Writer.Complete();
 
-            Task.WhenAll(readers).Wait();
+            await Task.WhenAll(readers);
         }
 
         private async Task StartReader(Channel<Tuple<string, IEnumerable<string>>> channel)

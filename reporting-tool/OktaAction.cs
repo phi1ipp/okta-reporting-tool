@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
 using reporting_tool.Infra;
@@ -45,7 +46,7 @@ namespace reporting_tool
         /// <summary>
         /// Entry point for execution of action
         /// </summary>
-        public abstract void Run();
+        public abstract Task Run();
 
         private static string PromptAndReadToken()
         {

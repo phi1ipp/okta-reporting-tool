@@ -37,7 +37,7 @@ namespace reporting_tool
         /// Report's main entry
         /// </summary>
         /// <returns></returns>
-        public override void Run()
+        public override async Task Run()
         {
             var appId = OktaClient.Applications
                 .ListApplications(q: _appLabel)
@@ -46,14 +46,12 @@ namespace reporting_tool
 
             if (appId == null)
             {
-                Console.WriteLine($"Application {_appLabel} doesn't exist");
-                return;
+                throw new Exception($"Application {_appLabel} doesn't exist");
             }
 
             var channel = Channel.CreateUnbounded<Tuple<string, string>>();
 
-            var processingThread = new Thread(StartReaders);
-            processingThread.Start(channel.Reader);
+            var readers = Task.Run(() => { StartReaders(channel.Reader); });
 
             var lines = _input == null
                 ? Program.ReadConsoleLines()
@@ -66,11 +64,7 @@ namespace reporting_tool
                         new Tuple<string, string>(appId, line.Split(new[] {' ', ','}, 1)[0])));
 
             channel.Writer.Complete();
-
-            while (processingThread.IsAlive)
-            {
-                Task.Delay(100).Wait();
-            }
+            await readers;
         }
 
         private void StartReaders(object channelReader)

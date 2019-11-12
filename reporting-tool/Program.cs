@@ -24,10 +24,8 @@ namespace reporting_tool
             var optionFilter = new Option("--filter", "filter expression", new Argument<string>());
 
             var aCommand = new Command("findCreator",
-                handler: CommandHandler.Create<FileInfo, string, string>((input, attrs, ofs) =>
-                {
-                    new CreatorReport(oktaConfig, input, attrs, ofs).Run();
-                }));
+                handler: CommandHandler.Create<FileInfo, string, string>(
+                    async (input, attrs, ofs) => { await new CreatorReport(oktaConfig, input, attrs, ofs).Run(); }));
 
             aCommand.AddOption(optionInputFile);
             aCommand.AddOption(optionAttrs);
@@ -35,9 +33,9 @@ namespace reporting_tool
             root.AddCommand(aCommand);
 
             var bCommand = new Command("setAttribute", handler: CommandHandler.Create<string, FileInfo, string>(
-                (attrName, input, attrValue) =>
+                async (attrName, input, attrValue) =>
                 {
-                    new AttributeSetter(oktaConfig, input, attrName, attrValue).Run();
+                    await new AttributeSetter(oktaConfig, input, attrName, attrValue).Run();
                 }));
 
             bCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
@@ -47,7 +45,7 @@ namespace reporting_tool
             root.AddCommand(bCommand);
 
             var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
-                (attrName, since) => { new EmptyAttributeReport(oktaConfig, attrName, since).Run(); }));
+                (attrName, since) => { new EmptyAttributeReport(oktaConfig, attrName, since).Run().Wait(); }));
 
             cCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
             cCommand.AddOption(new Option("--since", "select users created since specified date (YYYY-MM-DD format)",
@@ -67,14 +65,17 @@ namespace reporting_tool
             root.AddCommand(groupMembershipWithFilter);
 
             var eCommand = new Command("listApps",
-                handler: CommandHandler.Create<string>((ofs) => { new ApplicationList(oktaConfig, ofs).Run(); }));
+                handler: CommandHandler.Create<string>(async ofs =>
+                {
+                    await new ApplicationList(oktaConfig, ofs).Run();
+                }));
             eCommand.AddOption(optionOfs);
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, FileInfo, string>((appLabel, input, ofs) =>
+                handler: CommandHandler.Create<string, FileInfo, string>(async (appLabel, input, ofs) =>
                 {
-                    new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
+                    await new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
                 }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
@@ -87,9 +88,9 @@ namespace reporting_tool
             root.AddCommand(listGroups);
 
             var fCommand = new Command("userReport",
-                handler: CommandHandler.Create<FileInfo, string, string>((input, attrName, attrs) =>
+                handler: CommandHandler.Create<FileInfo, string, string>(async (input, attrName, attrs) =>
                 {
-                    new UserReport(oktaConfig, input, attrName, attrs).Run();
+                    await new UserReport(oktaConfig, input, attrName, attrs).Run();
                 }));
             fCommand.AddOption(optionInputFile);
             fCommand.AddOption(optionAttrs);
@@ -98,9 +99,9 @@ namespace reporting_tool
             root.AddCommand(fCommand);
 
             var gCommand = new Command("userSearchReport",
-                handler: CommandHandler.Create<string, string, string, string>((search, filter, attrs, ofs) =>
+                handler: CommandHandler.Create<string, string, string, string>(async (search, filter, attrs, ofs) =>
                 {
-                    new UserSearchReport(oktaConfig, search, filter, attrs, ofs).Run();
+                    await new UserSearchReport(oktaConfig, search, filter, attrs, ofs).Run();
                 }));
             gCommand.AddOption(optionSearch);
             gCommand.AddOption(optionFilter);
@@ -114,9 +115,9 @@ namespace reporting_tool
             root.AddCommand(activateUsers);
 
             var manageGroups = new Command("manageGroups",
-                handler: CommandHandler.Create<FileInfo, string>((input, action) =>
+                handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
                 {
-                    new ManageGroups(oktaConfig, input, action).Run();
+                    await new ManageGroups(oktaConfig, input, action).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
             manageGroups.AddOption(optionOfs);

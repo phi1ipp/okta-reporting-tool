@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace reporting_tool
 {
@@ -23,7 +24,7 @@ namespace reporting_tool
         /// <summary>
         /// The report entry point
         /// </summary>
-        public override void Run()
+        public override Task Run()
         {
             Console.WriteLine($"uuid{_ofs}name");
             OktaClient.Groups.ListGroups().ForEach(grp =>
@@ -32,6 +33,8 @@ namespace reporting_tool
                     ? $"{grp.Id}{_ofs}\"{grp.Profile.Name}\""
                     : $"{grp.Id}{_ofs}{grp.Profile.Name}");
             });
+            
+            return Task.CompletedTask;
         }
     }
 }
