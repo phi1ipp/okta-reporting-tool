@@ -15,8 +15,11 @@ namespace reporting_tool
     public class AttributeSetter : OktaAction
     {
         private readonly FileInfo _fileInfo;
-        private readonly string _attrName;
-        private readonly string _attrVal;
+        private readonly IEnumerable<string> _attrNames;
+        private readonly IEnumerable<string> _attrValues;
+        private readonly bool _writeEmpty;
+
+        private static readonly Regex Regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 
         /// <inheritdoc />
         /// <summary>
@@ -26,17 +29,28 @@ namespace reporting_tool
         /// <param name="fileInfo">FileInfo to use as a source of records</param>
         /// <param name="attrName">Attribute name to be set</param>
         /// <param name="attrValue">Attribute value to be set for all users</param>
-        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName, string attrValue) : base(config)
+        /// <param name="writeEmpty">Skip empty values while updating user profile</param>
+        public AttributeSetter(
+            OktaConfig config, FileInfo fileInfo, string attrName, string attrValue, bool writeEmpty = false)
+            : base(config)
         {
             _fileInfo = fileInfo;
+
+            //todo find a way to wipe out a value from Okta attribute
+            _writeEmpty = writeEmpty;
 
             if (string.IsNullOrWhiteSpace(attrName))
                 throw new InvalidOperationException("Required parameter --attrName is missing");
 
-            _attrName = attrName;
+            _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            if (!string.IsNullOrWhiteSpace(attrValue))
-                _attrVal = attrValue;
+            if (string.IsNullOrWhiteSpace(attrValue)) return;
+
+            _attrValues = Regex.Split(attrValue);
+            if (_attrValues.Count() < _attrNames.Count())
+            {
+                throw new Exception("List of values provided less than the number of fields to populate");
+            }
         }
 
         /// <inheritdoc />
@@ -51,20 +65,27 @@ namespace reporting_tool
 
             // produce map of uid -> attrValue
             // if _attrVal is set -> override what comes from a source input
-            var uidToValue = _attrVal == null
+            var uidToValue = _attrValues == null
                 ? lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
-                    .ToDictionary(lst => lst.First(), lst => lst.Last())
+                    .ToDictionary(lst => lst.First(), lst => Regex.Split(lst.Last()) as IEnumerable<string>)
                 : lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
-                    .ToDictionary(lst => lst.First(), lst => _attrVal);
+                    .ToDictionary(lst => lst.First(), lst => _attrValues);
 
-            var semaphore = new SemaphoreSlim(8);
+            var semaphore = new SemaphoreSlim(16);
             var tasks =
                 uidToValue.Select(
                     async pair =>
                     {
-                        var (uuid, value) = pair;
+                        var (uuid, values) = pair;
+
+                        var lstValues = values.ToList();
+                        if (lstValues.Count() != _attrNames.Count())
+                        {
+                            Console.WriteLine("Attribute values count does not match attribute names count");
+                            return;
+                        }
 
                         await semaphore.WaitAsync();
                         try
@@ -88,31 +109,39 @@ namespace reporting_tool
                                 return;
                             }
 
-                            // check if value is a list
-                            if (Regex.IsMatch(value, "^\\([^)]*\\)$"))
-                            {
-                                var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                                var arrValues = regex.Split(value.Substring(1, value.Length - 2))
-                                    .Select(val => val.Replace("\"", ""));
+                            _attrNames.Zip(lstValues).AsParallel().ForAll(
+                                (nameValPair) =>
+                                {
+                                    var (attrName, attrVal) = nameValPair;
 
-                                oktaUser.Profile[_attrName] = arrValues;
-                            }
-                            else
-                            {
-                                oktaUser.Profile[_attrName] = value.Replace("\"", "");
-                            }
+                                    if (!_writeEmpty && string.IsNullOrEmpty(attrVal)) return;
+
+                                    // check if value is a list
+                                    if (Regex.IsMatch(attrVal, "^\\([^)]*\\)$"))
+                                    {
+                                        var arrValues =
+                                            Regex.Split(attrVal.Substring(1, attrVal.Length - 2))
+                                                .Select(val => val.Replace("\"", ""));
+
+                                        oktaUser.Profile[attrName] = arrValues;
+                                    }
+                                    else
+                                    {
+                                        oktaUser.Profile[attrName] = attrVal.Replace("\"", "");
+                                    }
+                                });
 
                             try
                             {
                                 await oktaUser.UpdateAsync();
 
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrName} to {value} - success");
+                                    $"Updating user {uuid}: set attributes {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - success");
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrName} to {value} - update failed " +
+                                    $"Updating user {uuid}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - update failed " +
                                     $"({e})");
                             }
                         }
