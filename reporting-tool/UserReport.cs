@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -50,9 +51,12 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
+            var semaphore = new SemaphoreSlim(16);
+            
             var tasks = lines.Select(
                 async line =>
                 {
+                    await semaphore.WaitAsync();
                     var userName = line.Trim().Split(' ', ',').First();
 
                     try
@@ -84,6 +88,10 @@ namespace reporting_tool
                     {
                         Console.WriteLine(userName + " !!!!! exception processing the user");
                         Console.WriteLine(e);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
                     }
                 });
 
