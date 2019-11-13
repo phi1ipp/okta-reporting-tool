@@ -32,16 +32,17 @@ namespace reporting_tool
             aCommand.AddOption(optionOfs);
             root.AddCommand(aCommand);
 
-            var bCommand = new Command("setAttribute", handler: CommandHandler.Create<string, FileInfo, string>(
-                async (attrName, input, attrValue) =>
+            var bCommand = new Command("setAttribute", handler: CommandHandler.Create<string, FileInfo, string, bool>(
+                async (attrName, input, attrValue, writeEmpty) =>
                 {
-                    await new AttributeSetter(oktaConfig, input, attrName, attrValue).Run();
+                    await new AttributeSetter(oktaConfig, input, attrName, attrValue, writeEmpty).Run();
                 }));
 
             bCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
             bCommand.AddOption(new Option("--attrValue", "profile attribute value to be set", new Argument<string>()));
             bCommand.AddOption(optionInputFile);
             bCommand.AddOption(optionOfs);
+            bCommand.AddOption(new Option("--writeEmpty", "skip empty values", new Argument<bool>()));
             root.AddCommand(bCommand);
 
             var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
