@@ -17,6 +17,7 @@ namespace reporting_tool
         private readonly FileInfo _fileInfo;
         private readonly IEnumerable<string> _attrNames;
         private readonly IEnumerable<string> _attrValues;
+        private readonly bool _writeEmpty;
 
         private static readonly Regex Regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 
@@ -28,9 +29,15 @@ namespace reporting_tool
         /// <param name="fileInfo">FileInfo to use as a source of records</param>
         /// <param name="attrName">Attribute name to be set</param>
         /// <param name="attrValue">Attribute value to be set for all users</param>
-        public AttributeSetter(OktaConfig config, FileInfo fileInfo, string attrName, string attrValue) : base(config)
+        /// <param name="writeEmpty">Skip empty values while updating user profile</param>
+        public AttributeSetter(
+            OktaConfig config, FileInfo fileInfo, string attrName, string attrValue, bool writeEmpty = false)
+            : base(config)
         {
             _fileInfo = fileInfo;
+
+            //todo find a way to wipe out a value from Okta attribute
+            _writeEmpty = writeEmpty;
 
             if (string.IsNullOrWhiteSpace(attrName))
                 throw new InvalidOperationException("Required parameter --attrName is missing");
@@ -66,12 +73,19 @@ namespace reporting_tool
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
                     .ToDictionary(lst => lst.First(), lst => _attrValues);
 
-            var semaphore = new SemaphoreSlim(8);
+            var semaphore = new SemaphoreSlim(16);
             var tasks =
                 uidToValue.Select(
                     async pair =>
                     {
                         var (uuid, values) = pair;
+
+                        var lstValues = values.ToList();
+                        if (lstValues.Count() != _attrNames.Count())
+                        {
+                            Console.WriteLine("Attribute values count does not match attribute names count");
+                            return;
+                        }
 
                         await semaphore.WaitAsync();
                         try
@@ -95,10 +109,13 @@ namespace reporting_tool
                                 return;
                             }
 
-                            _attrNames.Zip(_attrValues).AsParallel().ForAll(
+                            _attrNames.Zip(lstValues).AsParallel().ForAll(
                                 (nameValPair) =>
                                 {
                                     var (attrName, attrVal) = nameValPair;
+
+                                    if (!_writeEmpty && string.IsNullOrEmpty(attrVal)) return;
+
                                     // check if value is a list
                                     if (Regex.IsMatch(attrVal, "^\\([^)]*\\)$"))
                                     {
@@ -119,12 +136,12 @@ namespace reporting_tool
                                 await oktaUser.UpdateAsync();
 
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrNames} to {values} - success");
+                                    $"Updating user {uuid}: set attributes {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - success");
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {_attrNames} to {values} - update failed " +
+                                    $"Updating user {uuid}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - update failed " +
                                     $"({e})");
                             }
                         }
