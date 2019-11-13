@@ -64,7 +64,8 @@ namespace reporting_tool
 
                                     return await user.PrintAttributesAsync(_attrs, OktaClient, _ofs);
                                 })
-                                .FirstOrDefault());
+                                .FirstOrDefault()
+                                .Unwrap());
                     });
             await Task.WhenAll(tasks);
         }
