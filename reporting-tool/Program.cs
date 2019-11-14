@@ -110,11 +110,6 @@ namespace reporting_tool
             gCommand.AddOption(root.FirstOrDefault(sym => sym.Name == "OFS") as Option);
             root.AddCommand(gCommand);
 
-            var activateUsers = new Command("activateUsers",
-                handler: CommandHandler.Create<FileInfo>(input => new ActivateUsers(oktaConfig, input).Run()));
-            activateUsers.AddOption(optionInputFile);
-            root.AddCommand(activateUsers);
-
             var userLifeCycle = new Command("userLifecycle",
                 handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
                     await new UserLifecycle(oktaConfig, input, action).Run()));
