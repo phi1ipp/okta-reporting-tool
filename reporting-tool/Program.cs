@@ -115,6 +115,14 @@ namespace reporting_tool
             activateUsers.AddOption(optionInputFile);
             root.AddCommand(activateUsers);
 
+            var userLifeCycle = new Command("userLifecycle",
+                handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
+                    await new UserLifecycle(oktaConfig, input, action).Run()));
+            userLifeCycle.AddOption(optionOfs);
+            userLifeCycle.AddOption(optionInputFile);
+            userLifeCycle.AddOption(new Option("--action", "activate, deactivate or delete", new Argument<string>()));
+            root.AddCommand(userLifeCycle);
+
             var manageGroups = new Command("manageGroups",
                 handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
                 {
