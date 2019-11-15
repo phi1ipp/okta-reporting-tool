@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -16,6 +16,7 @@ namespace reporting_tool
     {
         private readonly FileInfo _fileInfo;
         private readonly string _action;
+        private IDictionary<string, string> _dictGroupId = new Dictionary<string, string>();
 
         /// <summary>
         /// Public constructor
@@ -42,57 +43,60 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
-            var channel = Channel.CreateUnbounded<Tuple<string, IEnumerable<string>>>();
-
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j => { await StartReader(channel); });
-
             var regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-            lines
-                .AsParallel()
-                .ForAll(line =>
-                {
-                    var parts = line.Split(' ', 2);
-                    var groups = regex.Split(parts[1]);
+            var semaphore = new SemaphoreSlim(10);
 
-                    channel.Writer.TryWrite(
-                        new Tuple<string, IEnumerable<string>>(
-                            parts[0],
-                            groups.Select(grp => grp.Replace("\"", "")).ToList()));
+            var tasks = lines
+                .Select(async line =>
+                {
+                    var parts = line.Split(new[] {' ', ','}, 2);
+                    var userId = parts[0];
+                    var grps = parts[1];
+
+                    var groups = regex.Split(grps).Select(grp => grp.Replace("\"", ""));
+
+                    await semaphore.WaitAsync();
+                    try
+                    {
+                        var user = await OktaClient.Users.GetUserAsync(parts[0]);
+
+                        if (_action == "display")
+                        {
+                            Console.WriteLine(await GetUserGroups(user));
+                        }
+                        else
+                        {
+                            Console.WriteLine(await AddRemoveGroups(user, groups));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e is OktaApiException && e.Message.Contains("Not found")
+                            ? $"{userId} !!! user not found"
+                            : $"{userId} !!! exception fetching the user: {e.Message}");
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
                 });
-            channel.Writer.Complete();
 
-            await Task.WhenAll(readers);
+            await Task.WhenAll(tasks);
         }
 
-        private async Task StartReader(Channel<Tuple<string, IEnumerable<string>>> channel)
-        {
-            var reader = channel.Reader;
-
-            while (await reader.WaitToReadAsync())
-            {
-                var (uuid, groups) = await reader.ReadAsync();
-
-                if (_action == "display")
-                {
-                    Console.WriteLine(await GetUserGroups(uuid));
-                }
-                else
-                {
-                    Console.WriteLine(await AddRemoveGroups(uuid, groups));
-                }
-            }
-        }
-
-        private async Task<string> AddRemoveGroups(string uuid, IEnumerable<string> groups)
+        private async Task<string> AddRemoveGroups(IUser user, IEnumerable<string> groups)
         {
             foreach (var grp in groups)
             {
-                var grpId = await OktaClient.Groups
-                    .ListGroups(q: grp)
-                    .Select(g => g.Id)
-                    .FirstOrDefault();
+                if (!_dictGroupId.TryGetValue(grp, out var grpId))
+                {
+                    grpId = await OktaClient.Groups
+                        .ListGroups(q: grp)
+                        .Select(g => g.Id)
+                        .FirstOrDefault();
+
+                    _dictGroupId[grp] = grpId;
+                }
 
                 if (grpId == null)
                 {
@@ -104,12 +108,12 @@ namespace reporting_tool
                     switch (_action)
                     {
                         case "add":
-                            await OktaClient.Groups.AddUserToGroupAsync(grpId, uuid);
-                            return $"{grp} added to {uuid}";
+                            await OktaClient.Groups.AddUserToGroupAsync(grpId, user.Id);
+                            return $"{grp} added to {user.Profile.Login}";
 
                         case "remove":
-                            await OktaClient.Groups.RemoveGroupUserAsync(grpId, uuid);
-                            return $"{grp} removed from {uuid}";
+                            await OktaClient.Groups.RemoveGroupUserAsync(grpId, user.Id);
+                            return $"{grp} removed from {user.Profile.Login}";
 
                         default:
                             return $"unknown action: {_action}";
@@ -118,23 +122,23 @@ namespace reporting_tool
                 catch (Exception e)
                 {
                     if (e is OktaApiException && e.Message.StartsWith("Not found"))
-                        return $"{uuid} not found";
+                        return $"{user.Id} not found";
 
-                    return $"{uuid} - exception: {e.Message}";
+                    return $"{user.Id} - exception: {e.Message}";
                 }
             }
 
             throw new NotImplementedException();
         }
 
-        private async Task<string> GetUserGroups(string uuid)
+        private async Task<string> GetUserGroups(IUser user)
         {
             try
             {
-                return uuid + " " +
+                return user.Profile.Login + " " +
                        string.Join(',',
                            await OktaClient.Users
-                               .ListUserGroups(uuid)
+                               .ListUserGroups(user.Id)
                                .Select(g =>
                                    g.Profile.Name.Contains(' ')
                                        ? $"\"{g.Profile.Name}\""
@@ -143,11 +147,7 @@ namespace reporting_tool
             }
             catch (Exception e)
             {
-                if (e.InnerException is OktaApiException oktaApiException &&
-                    oktaApiException.Message.StartsWith("Not found"))
-                    return $"{uuid} not found";
-
-                return $"{uuid} - exception: {e.Message}";
+                return $"{user.Profile.Login} - exception: {e.Message}";
             }
         }
     }
