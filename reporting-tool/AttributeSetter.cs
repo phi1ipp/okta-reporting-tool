@@ -20,6 +20,7 @@ namespace reporting_tool
         private readonly bool _writeEmpty;
 
         private static readonly Regex Regex = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+        private static readonly Regex ListRegex = new Regex(",(?=(?:[^']*'[^']*')*(?![^']*'))");
 
         /// <inheritdoc />
         /// <summary>
@@ -35,8 +36,6 @@ namespace reporting_tool
             : base(config)
         {
             _fileInfo = fileInfo;
-
-            //todo find a way to wipe out a value from Okta attribute
             _writeEmpty = writeEmpty;
 
             if (string.IsNullOrWhiteSpace(attrName))
@@ -117,11 +116,12 @@ namespace reporting_tool
                                     if (!_writeEmpty && string.IsNullOrEmpty(attrVal)) return;
 
                                     // check if value is a list
-                                    if (Regex.IsMatch(attrVal, "^\\([^)]*\\)$"))
+                                    if (Regex.IsMatch(attrVal,"^\"\\([^)]*\\)\"$"))
                                     {
                                         var arrValues =
-                                            Regex.Split(attrVal.Substring(1, attrVal.Length - 2))
-                                                .Select(val => val.Replace("\"", ""));
+                                            ListRegex.Split(attrVal.Substring(2, attrVal.Length - 4))
+                                                .Select(val => val.Replace("'", ""))
+                                                .ToList();
 
                                         oktaUser.Profile[attrName] = arrValues;
                                     }
