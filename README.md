@@ -132,9 +132,24 @@ Examples:
 * `cut -f1 -d, /tmp/loa | ./reporting-tool setAttribute --attrName LOA --attrValue "3"` similar to the first example, just to demonstrate that the input may be a standard input
 
 ```
--- input     <file_name>
--- attrName  <user_profile_attribute_name>
--- attrValue <value_to_assign_to_all_given_users> (optional)
+--input     <file_name>
+--attrName  <user_profile_attribute_name>
+--attrValue <value_to_assign_to_all_given_users> (optional)
+```
+
+### manageGroups
+This action is to manage/report user's group membership in Okta. To add/remove group membership the input has to be formatted the 
+following way
+```
+username1,"group 1","group 2"
+username2,"group 2","group n"
+```
+so that a user is assigned/removed to/from the groups specified in the same line.
+
+The action accepts the following switches, where `--input` can be skipped if standard input is used.
+```
+--input  <file_name>
+--action [add | remove | display]
 ```
 
 ### listGroups
