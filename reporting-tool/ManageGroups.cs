@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -51,9 +52,6 @@ namespace reporting_tool
                 {
                     var parts = line.Split(new[] {' ', ','}, 2);
                     var userId = parts[0];
-                    var grps = parts[1];
-
-                    var groups = regex.Split(grps).Select(grp => grp.Replace("\"", ""));
 
                     await semaphore.WaitAsync();
                     try
@@ -66,6 +64,9 @@ namespace reporting_tool
                         }
                         else
                         {
+                            var grps = parts[1];
+                            var groups = regex.Split(grps).Select(grp => grp.Replace("\"", ""));
+                            
                             Console.WriteLine(await AddRemoveGroups(user, groups));
                         }
                     }
