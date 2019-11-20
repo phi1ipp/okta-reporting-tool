@@ -1,9 +1,9 @@
 grammar BoolExpr;
 
 expr : '(' expr')'      #parenthesisExp 
+    | 'not' expr        #notExp
     | expr 'and' expr   #andExp
     | expr 'or' expr    #orExp
-    | 'not' expr        #notExp
     | attr_comp         #attrCompExp
     | attr_pr           #attrPrExp
     ;
