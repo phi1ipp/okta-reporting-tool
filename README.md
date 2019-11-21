@@ -21,7 +21,6 @@ Commands:
  listGroups
  userReport
  userSearchReport
- activateUsers
  manageGroups
 ```
 ### Configuration
@@ -91,8 +90,8 @@ a user was created long time ago, you won't be able to find a creator.
 
 It accepts the following switches:
 ```
--- input <file_name> 
--- attrs <csv_of_creator_attributes>
+--input <file_name> 
+--attrs <csv_of_creator_attributes>
 ```
 
 ### userReport
@@ -101,8 +100,8 @@ This report can be used when you have a list of user UUIDs/logins for whom you w
 
 It accepts the following switches:
 ```
--- input  <file_name> 
--- attrs  <csv_of_user_attributes>
+--input  <file_name> 
+--attrs  <csv_of_user_attributes>
 ```
 
 ### userSearchReport
@@ -113,10 +112,10 @@ on a client side. Due to Okta API limitation, you can't use `--search` if your r
 
 It accepts the following switches:
 ```
--- input  <file_name> 
--- filter <filter_expression>
--- search <filter_expression>
--- attrs  <csv_of_user_attributes>
+--input  <file_name> 
+--filter <filter_expression>
+--search <filter_expression>
+--attrs  <csv_of_user_attributes>
 ```
 
 ### setAttribute
@@ -167,6 +166,13 @@ It's a basic report to extract all applications from Okta with their UUID, name 
 This report allows to find if users are assigned to an application specified by `--appLabel` and display their application username.
 
 ```
--- input     <file_name with user_ids>
--- appLabel  <application label>
+--input     <file_name with user_ids>
+--appLabel  <application label>
+```
+### userLifecycle
+This action is to manage user lifecycle (activate, deactivate, delete) for all users given in the input file or standard input
+
+```
+--input  <file_name_with_usernames>
+--action [activate,deactivate,delete]
 ```
