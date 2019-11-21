@@ -66,7 +66,7 @@ namespace reporting_tool
                         {
                             var grps = parts[1];
                             var groups = regex.Split(grps).Select(grp => grp.Replace("\"", ""));
-                            
+
                             Console.WriteLine(await AddRemoveGroups(user, groups));
                         }
                     }
@@ -87,49 +87,51 @@ namespace reporting_tool
 
         private async Task<string> AddRemoveGroups(IUser user, IEnumerable<string> groups)
         {
-            foreach (var grp in groups)
-            {
-                if (!_dictGroupId.TryGetValue(grp, out var grpId))
+            var tasks =
+                groups.Select(async grp =>
                 {
-                    grpId = await OktaClient.Groups
-                        .ListGroups(q: grp)
-                        .Select(g => g.Id)
-                        .FirstOrDefault();
-
-                    _dictGroupId[grp] = grpId;
-                }
-
-                if (grpId == null)
-                {
-                    return $"{grp} doesn't exist in Okta";
-                }
-
-                try
-                {
-                    switch (_action)
+                    if (!_dictGroupId.TryGetValue(grp, out var grpId))
                     {
-                        case "add":
-                            await OktaClient.Groups.AddUserToGroupAsync(grpId, user.Id);
-                            return $"{grp} added to {user.Profile.Login}";
+                        grpId = await OktaClient.Groups
+                            .ListGroups(q: grp)
+                            .Select(g => g.Id)
+                            .FirstOrDefault();
 
-                        case "remove":
-                            await OktaClient.Groups.RemoveGroupUserAsync(grpId, user.Id);
-                            return $"{grp} removed from {user.Profile.Login}";
-
-                        default:
-                            return $"unknown action: {_action}";
+                        _dictGroupId[grp] = grpId;
                     }
-                }
-                catch (Exception e)
-                {
-                    if (e is OktaApiException && e.Message.StartsWith("Not found"))
-                        return $"{user.Id} not found";
 
-                    return $"{user.Id} - exception: {e.Message}";
-                }
-            }
+                    if (grpId == null)
+                    {
+                        return $"{grp} doesn't exist in Okta";
+                    }
 
-            throw new NotImplementedException();
+                    try
+                    {
+                        switch (_action)
+                        {
+                            case "add":
+                                await OktaClient.Groups.AddUserToGroupAsync(grpId, user.Id);
+                                return $"{grp} added to {user.Profile.Login}";
+
+                            case "remove":
+                                await OktaClient.Groups.RemoveGroupUserAsync(grpId, user.Id);
+                                return $"{grp} removed from {user.Profile.Login}";
+
+                            default:
+                                return $"unknown action: {_action}";
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is OktaApiException && e.Message.StartsWith("Not found"))
+                            return $"{user.Id} not found";
+
+                        return $"{user.Id} - exception: {e.Message}";
+                    }
+                });
+            
+            var allResults = await Task.WhenAll(tasks);
+            return string.Join('\n', allResults);
         }
 
         private async Task<string> GetUserGroups(IUser user)
