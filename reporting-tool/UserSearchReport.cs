@@ -1,12 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
-using YamlDotNet.Core.Events;
 
 namespace reporting_tool
 {
@@ -46,7 +43,7 @@ namespace reporting_tool
         /// <summary>
         /// Report main entry
         /// </summary>
-        public override void Run()
+        public override async Task Run()
         {
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
@@ -54,44 +51,20 @@ namespace reporting_tool
                 ? OktaClient.Users.Where(user => _filter(user))
                 : OktaClient.Users.ListUsers(search: _search).Where(user => _filter(user));
 
-            var channel = Channel.CreateUnbounded<IUser>();
+            var semaphore = new SemaphoreSlim(8);
 
-            var processingThread = new Thread(StartReaders);
-            processingThread.Start(channel.Reader);
-
-            userBase.ForEachAsync(user =>
+            await userBase.ForEachAsync(async user =>
             {
-                channel.Writer.TryWrite(user);
-            }).Wait();
-
-            channel.Writer.Complete();
-
-            while (processingThread.IsAlive)
-            {
-                Task.Delay(100).Wait(); 
-            }
-        }
-
-        void StartReaders(object channelReader)
-        {
-            if (!(channelReader is ChannelReader<IUser> reader))
-            {
-                throw new Exception("Reader is null");
-            }
-            
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j =>
-                    {
-                        while (await reader.WaitToReadAsync())
-                        {
-                            var user = await reader.ReadAsync();
-
-                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
-                        }
-                    });
-
-            Task.WhenAll(readers).Wait();
+                await semaphore.WaitAsync();
+                try
+                {
+                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
         }
     }
 }

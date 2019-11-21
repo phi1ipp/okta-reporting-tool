@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -44,61 +42,26 @@ namespace reporting_tool
         /// Report's main entry
         /// </summary>
         /// <returns></returns>
-        public override void Run()
+        public override async Task Run()
         {
-            var grpId = OktaClient.Groups
+            var grpId = await OktaClient.Groups
                 .ListGroups(q: _grpName)
                 .Select(grp => grp.Id)
-                .First().Result;
+                .FirstOrDefault();
 
             if (grpId == null)
             {
-                Console.WriteLine($"Group {_grpName} doesn't exist");
+                Console.WriteLine($"Group \"{_grpName}\" doesn't exist");
                 return;
             }
 
-            var channel = Channel.CreateUnbounded<IUser>();
-
-            var processingThread = new Thread(StartReaders);
-            processingThread.Start(channel.Reader);
-            
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
-            OktaClient.Groups
+            await OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Where(user => _filter(user))
-                .ForEachAsync(user =>
-                    channel.Writer.TryWrite(user))
-                .Wait();
-            
-            channel.Writer.Complete();
-            
-            while (processingThread.IsAlive)
-            {
-                Task.Delay(100).Wait(); 
-            }
-        }
-
-        private void StartReaders(object channelReader)
-        {
-            if (!(channelReader is ChannelReader<IUser> reader))
-            {
-                throw new Exception("Reader is null");
-            }
-            
-            var readers =
-                Enumerable.Range(1, 8)
-                    .Select(async j =>
-                    {
-                        while (await reader.WaitToReadAsync())
-                        {
-                            var user = await reader.ReadAsync();
-
-                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
-                        }
-                    });
-
-            Task.WhenAll(readers).Wait();
+                .ForEachAsync(async user =>
+                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)));
         }
     }
 }

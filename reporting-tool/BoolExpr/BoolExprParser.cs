@@ -45,7 +45,7 @@ public partial class BoolExprParser : Parser {
 	};
 
 	private static readonly string[] _LiteralNames = {
-		null, "'('", "')'", "'and'", "'or'", "'not'", "'eq'", "'co'", "'sw'", 
+		null, "'('", "')'", "'not'", "'and'", "'or'", "'eq'", "'co'", "'sw'", 
 		"'pr'", "'profile.'"
 	};
 	private static readonly string[] _SymbolicNames = {
@@ -204,8 +204,8 @@ public partial class BoolExprParser : Parser {
 				_localctx = new NotExpContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 13; Match(T__4);
-				State = 14; expr(3);
+				State = 13; Match(T__2);
+				State = 14; expr(5);
 				}
 				break;
 			case 3:
@@ -243,9 +243,9 @@ public partial class BoolExprParser : Parser {
 						_localctx = new AndExpContext(new ExprContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expr);
 						State = 19;
-						if (!(Precpred(Context, 5))) throw new FailedPredicateException(this, "Precpred(Context, 5)");
-						State = 20; Match(T__2);
-						State = 21; expr(6);
+						if (!(Precpred(Context, 4))) throw new FailedPredicateException(this, "Precpred(Context, 4)");
+						State = 20; Match(T__3);
+						State = 21; expr(5);
 						}
 						break;
 					case 2:
@@ -253,9 +253,9 @@ public partial class BoolExprParser : Parser {
 						_localctx = new OrExpContext(new ExprContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expr);
 						State = 22;
-						if (!(Precpred(Context, 4))) throw new FailedPredicateException(this, "Precpred(Context, 4)");
-						State = 23; Match(T__3);
-						State = 24; expr(5);
+						if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
+						State = 23; Match(T__4);
+						State = 24; expr(4);
 						}
 						break;
 					}
@@ -490,8 +490,8 @@ public partial class BoolExprParser : Parser {
 	}
 	private bool expr_sempred(ExprContext _localctx, int predIndex) {
 		switch (predIndex) {
-		case 0: return Precpred(Context, 5);
-		case 1: return Precpred(Context, 4);
+		case 0: return Precpred(Context, 4);
+		case 1: return Precpred(Context, 3);
 		}
 		return true;
 	}
@@ -515,16 +515,16 @@ public partial class BoolExprParser : Parser {
 		'\x3', '\x2', '\x2', '\x2', '\n', '\v', '\b', '\x2', '\x1', '\x2', '\v', 
 		'\f', '\a', '\x3', '\x2', '\x2', '\f', '\r', '\x5', '\x2', '\x2', '\x2', 
 		'\r', '\xE', '\a', '\x4', '\x2', '\x2', '\xE', '\x14', '\x3', '\x2', '\x2', 
-		'\x2', '\xF', '\x10', '\a', '\a', '\x2', '\x2', '\x10', '\x14', '\x5', 
-		'\x2', '\x2', '\x5', '\x11', '\x14', '\x5', '\x4', '\x3', '\x2', '\x12', 
+		'\x2', '\xF', '\x10', '\a', '\x5', '\x2', '\x2', '\x10', '\x14', '\x5', 
+		'\x2', '\x2', '\a', '\x11', '\x14', '\x5', '\x4', '\x3', '\x2', '\x12', 
 		'\x14', '\x5', '\x6', '\x4', '\x2', '\x13', '\n', '\x3', '\x2', '\x2', 
 		'\x2', '\x13', '\xF', '\x3', '\x2', '\x2', '\x2', '\x13', '\x11', '\x3', 
 		'\x2', '\x2', '\x2', '\x13', '\x12', '\x3', '\x2', '\x2', '\x2', '\x14', 
-		'\x1D', '\x3', '\x2', '\x2', '\x2', '\x15', '\x16', '\f', '\a', '\x2', 
-		'\x2', '\x16', '\x17', '\a', '\x5', '\x2', '\x2', '\x17', '\x1C', '\x5', 
-		'\x2', '\x2', '\b', '\x18', '\x19', '\f', '\x6', '\x2', '\x2', '\x19', 
-		'\x1A', '\a', '\x6', '\x2', '\x2', '\x1A', '\x1C', '\x5', '\x2', '\x2', 
-		'\a', '\x1B', '\x15', '\x3', '\x2', '\x2', '\x2', '\x1B', '\x18', '\x3', 
+		'\x1D', '\x3', '\x2', '\x2', '\x2', '\x15', '\x16', '\f', '\x6', '\x2', 
+		'\x2', '\x16', '\x17', '\a', '\x6', '\x2', '\x2', '\x17', '\x1C', '\x5', 
+		'\x2', '\x2', '\a', '\x18', '\x19', '\f', '\x5', '\x2', '\x2', '\x19', 
+		'\x1A', '\a', '\a', '\x2', '\x2', '\x1A', '\x1C', '\x5', '\x2', '\x2', 
+		'\x6', '\x1B', '\x15', '\x3', '\x2', '\x2', '\x2', '\x1B', '\x18', '\x3', 
 		'\x2', '\x2', '\x2', '\x1C', '\x1F', '\x3', '\x2', '\x2', '\x2', '\x1D', 
 		'\x1B', '\x3', '\x2', '\x2', '\x2', '\x1D', '\x1E', '\x3', '\x2', '\x2', 
 		'\x2', '\x1E', '\x3', '\x3', '\x2', '\x2', '\x2', '\x1F', '\x1D', '\x3', 

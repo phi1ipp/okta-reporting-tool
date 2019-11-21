@@ -15,7 +15,7 @@ namespace reporting_tool
     public class ApplicationList : OktaAction
     {
         private readonly string _ofs;
-        
+
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -29,11 +29,10 @@ namespace reporting_tool
         /// <summary>
         /// Main report entry
         /// </summary>
-        public override void Run()
+        public override async Task Run()
         {
             Console.WriteLine($"uuid,name,label");
-            OktaClient.Applications.ListApplications().ForEach(app =>
-            {
+            await OktaClient.Applications.ListApplications().ForEachAsync(app => {
                 Console.WriteLine($"{app.Id}{_ofs}{app.Name}{_ofs}{app.Label}");
             });
         }
