@@ -21,6 +21,7 @@ Commands:
  listGroups
  userReport
  userSearchReport
+ userLifecycle
  manageGroups
 ```
 ### Configuration
