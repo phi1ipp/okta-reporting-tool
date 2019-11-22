@@ -119,12 +119,13 @@ namespace reporting_tool
             root.AddCommand(userLifeCycle);
 
             var manageGroups = new Command("manageGroups",
-                handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
+                handler: CommandHandler.Create<FileInfo, string, string>(async (input, action, grpName) =>
                 {
-                    await new ManageGroups(oktaConfig, input, action).Run();
+                    await new ManageGroups(oktaConfig, input, action, grpName).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
             manageGroups.AddOption(optionOfs);
+            manageGroups.AddOption(optionGroupName);
             manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
             root.AddCommand(manageGroups);
 

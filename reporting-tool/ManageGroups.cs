@@ -17,6 +17,7 @@ namespace reporting_tool
     {
         private readonly FileInfo _fileInfo;
         private readonly string _action;
+        private readonly string _grpName;
         private IDictionary<string, string> _dictGroupId = new Dictionary<string, string>();
 
         /// <summary>
@@ -25,7 +26,7 @@ namespace reporting_tool
         /// <param name="config">Okta Configuration object</param>
         /// <param name="fileInfo">File with UUID "comma separated list of groups"</param>
         /// <param name="action">String [add | remove] to indicate the operation for the given list of groups</param>
-        public ManageGroups(OktaConfig config, FileInfo fileInfo, string action) : base(config)
+        public ManageGroups(OktaConfig config, FileInfo fileInfo, string action, string grpName = null) : base(config)
         {
             _fileInfo = fileInfo;
 
@@ -33,6 +34,7 @@ namespace reporting_tool
                 throw new InvalidOperationException("action can be either 'add', 'remove' or 'display'");
 
             _action = action;
+            _grpName = grpName;
         }
 
         /// <summary>
@@ -64,10 +66,14 @@ namespace reporting_tool
                         }
                         else
                         {
-                            var grps = parts[1];
-                            var groups = regex.Split(grps).Select(grp => grp.Replace("\"", ""));
+                            var groups = _grpName == null
+                                ? regex.Split(parts[1]).Select(grp => grp.Replace("\"", ""))
+                                : regex.Split(_grpName).Select(grp => grp.Replace("\"", ""));
 
-                            Console.WriteLine(await AddRemoveGroups(user, groups));
+                            var lstGroups = groups.ToList();
+                            
+                            if (lstGroups.ToList().Any())
+                                Console.WriteLine(await AddRemoveGroups(user, lstGroups));
                         }
                     }
                     catch (Exception e)
@@ -129,7 +135,7 @@ namespace reporting_tool
                         return $"{user.Id} - exception: {e.Message}";
                     }
                 });
-            
+
             var allResults = await Task.WhenAll(tasks);
             return string.Join('\n', allResults);
         }
