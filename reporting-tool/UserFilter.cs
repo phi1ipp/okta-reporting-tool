@@ -94,6 +94,18 @@ namespace reporting_tool
                     : user.GetNonProfileAttribute(attrName) == attrVal;
         }
 
+        public override Func<IUser, bool> VisitEwCompare(BoolExprParser.EwCompareContext context)
+        {
+            var attrVal = context.children.Last().GetText().Trim('"');
+
+            var (attrType, attrName) = GetAttributeInfo(context.children.First());
+
+            return user =>
+                attrType == "profile"
+                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString().EndsWith(attrVal)
+                    : user.GetNonProfileAttribute(attrName).EndsWith(attrVal);
+        }
+
         public override Func<IUser, bool> VisitSwCompare(BoolExprParser.SwCompareContext context)
         {
             var attrVal = context.children.Last().GetText().Trim('"');
@@ -102,7 +114,7 @@ namespace reporting_tool
 
             return user =>
                 attrType == "profile"
-                    ? (user.Profile[attrName] != null && user.Profile[attrName].ToString().StartsWith(attrVal))
+                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString().StartsWith(attrVal)
                     : user.GetNonProfileAttribute(attrName).StartsWith(attrVal);
         }
 
