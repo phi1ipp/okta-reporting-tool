@@ -19,7 +19,7 @@ namespace reporting_tool
         /// </summary>
         /// <param name="config">Okta Configuration object</param>
         /// <param name="fileInfo">File with input data</param>
-        /// <param name="action">Action to be taken: [activate, deactivate, delete]</param>
+        /// <param name="action">Action to be taken: [activate, deactivate, suspend, unsuspend, delete]</param>
         public UserLifecycle(OktaConfig config, FileInfo fileInfo, string action) : base(config)
         {
             _fileInfo = fileInfo;
@@ -52,6 +52,14 @@ namespace reporting_tool
                             case "deactivate":
                                 await user.DeactivateAsync();
                                 Console.WriteLine($"{userName} deactivated");
+                                break;
+                            case "suspend":
+                                await user.SuspendAsync();
+                                Console.WriteLine($"{userName} suspended");
+                                break;
+                            case "unsuspend":
+                                await user.UnsuspendAsync();
+                                Console.WriteLine($"{userName} unsuspended");
                                 break;
                             case "delete":
                                 if (user.Status != UserStatus.Suspended)
