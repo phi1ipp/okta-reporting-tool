@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace reporting_tool
@@ -43,29 +44,40 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
+            var semaphore = new SemaphoreSlim(8);
+            
             Console.WriteLine("userid" + _ofs + UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             var tasks = lines
                 .Select(
                     async line =>
                     {
-                        var userId = line.Trim().Split(' ', ',').First();
+                        await semaphore.WaitAsync();
 
-                        Console.WriteLine(
-                            userId + _ofs +
-                            await OktaClient.Logs
-                                .GetLogs(
-                                    filter:
-                                    $"eventType eq \"user.lifecycle.create\" and target.id eq \"{userId}\"",
-                                    since: DateTime.Now.Add(TimeSpan.FromDays(-180d)).ToString("yyyy-MM-dd"))
-                                .Select(async ev =>
-                                {
-                                    var user = await OktaClient.Users.GetUserAsync(ev.Actor.Id);
+                        try
+                        {
+                            var userId = line.Trim().Split(' ', ',').First();
 
-                                    return await user.PrintAttributesAsync(_attrs, OktaClient, _ofs);
-                                })
-                                .FirstOrDefault()
-                                .Unwrap());
+                            Console.WriteLine(
+                                userId + _ofs +
+                                await OktaClient.Logs
+                                    .GetLogs(
+                                        filter:
+                                        $"eventType eq \"user.lifecycle.create\" and target.id eq \"{userId}\"",
+                                        since: DateTime.Now.Add(TimeSpan.FromDays(-180d)).ToString("yyyy-MM-dd"))
+                                    .Select(async ev =>
+                                    {
+                                        var user = await OktaClient.Users.GetUserAsync(ev.Actor.Id);
+
+                                        return await user.PrintAttributesAsync(_attrs, OktaClient, _ofs);
+                                    })
+                                    .FirstOrDefault()
+                                    .Unwrap());
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
                     });
             await Task.WhenAll(tasks);
         }
