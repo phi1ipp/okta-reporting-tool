@@ -52,7 +52,7 @@ namespace reporting_tool
                 : File.ReadLines(_fileInfo.FullName);
 
             var semaphore = new SemaphoreSlim(16);
-            
+
             var tasks = lines.Select(
                 async line =>
                 {
@@ -62,7 +62,12 @@ namespace reporting_tool
                     try
                     {
                         var users = string.IsNullOrWhiteSpace(_attrName)
-                            ? new List<IUser> {await OktaClient.Users.GetUserAsync(userName)}
+                            ? new List<IUser>
+                            {
+                                userName.Contains('/') 
+                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userName}\"").First()
+                                    : await OktaClient.Users.GetUserAsync(userName)
+                            }
                             : await OktaClient.Users.ListUsers(search: $"profile.{_attrName} eq \"{userName}\"")
                                 .ToList();
 

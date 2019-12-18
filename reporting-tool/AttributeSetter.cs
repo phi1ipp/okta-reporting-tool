@@ -77,7 +77,7 @@ namespace reporting_tool
                 uidToValue.Select(
                     async pair =>
                     {
-                        var (uuid, values) = pair;
+                        var (userId, values) = pair;
 
                         var lstValues = values.ToList();
                         if (lstValues.Count() != _attrNames.Count())
@@ -93,18 +93,20 @@ namespace reporting_tool
 
                             try
                             {
-                                oktaUser = await OktaClient.Users.GetUserAsync(uuid);
+                                oktaUser = userId.Contains('/')
+                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userId}\"").First()
+                                    : await OktaClient.Users.GetUserAsync(userId);
                             }
                             catch (OktaApiException e)
                             {
                                 Console.WriteLine(e.Message.Contains("Not found")
-                                    ? $"{uuid} !!! user not found"
-                                    : $"{uuid} !!! exception fetching the user: {e.Message}");
+                                    ? $"{userId} !!! user not found"
+                                    : $"{userId} !!! exception fetching the user: {e.Message}");
                                 return;
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine($"{uuid} !!! exception fetching the user: {e}");
+                                Console.WriteLine($"{userId} !!! exception fetching the user: {e}");
                                 return;
                             }
 
@@ -136,12 +138,12 @@ namespace reporting_tool
                                 await oktaUser.UpdateAsync();
 
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attributes {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - success");
+                                    $"Updating user {userId}: set attributes {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - success");
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(
-                                    $"Updating user {uuid}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - update failed " +
+                                    $"Updating user {userId}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - update failed " +
                                     $"({e})");
                             }
                         }
