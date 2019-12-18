@@ -46,7 +46,7 @@ namespace reporting_tool
             root.AddCommand(bCommand);
 
             var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
-                (attrName, since) => { new EmptyAttributeReport(oktaConfig, attrName, since).Run().Wait(); }));
+                async (attrName, since) => { await new EmptyAttributeReport(oktaConfig, attrName, since).Run(); }));
 
             cCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
             cCommand.AddOption(new Option("--since", "select users created since specified date (YYYY-MM-DD format)",

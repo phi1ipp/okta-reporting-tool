@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace reporting_tool
@@ -31,20 +32,32 @@ namespace reporting_tool
         /// </summary>
         public override Task Run()
         {
+            var semaphore = new SemaphoreSlim(8);
             return OktaClient.Users
                 .ListUsers(search: $"created gt \"{_since:yyyy-MM-ddT00:00:00.000Z}\"")
                 .Where(u => string.IsNullOrEmpty(u.Profile[_attrName]?.ToString()))
                 .Select(async u =>
                 {
+                    await semaphore.WaitAsync();
 
-                    var lstGroups = await OktaClient.Users
-                        .ListUserGroups(u.Id)
-                        .Select(gr => gr.Profile.Name)
-                        .ToList();
+                    try
+                    {
+                        var lstGroups = await OktaClient.Users
+                            .ListUserGroups(u.Id)
+                            .Select(gr => gr.Profile.Name)
+                            .ToList();
 
-                    return $"{u.Id} {string.Join(',', lstGroups)}";
+                        return $"{u.Id} {string.Join(',', lstGroups)}";
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
                 })
-                .ForEachAsync(Console.WriteLine);
+                .ForEachAsync(async task =>
+                {
+                    Console.WriteLine(await task);
+                });
         }
     }
 }
