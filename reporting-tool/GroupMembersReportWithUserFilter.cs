@@ -57,11 +57,14 @@ namespace reporting_tool
 
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
-            await OktaClient.Groups
+            var tasks = OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Where(user => _filter(user))
-                .ForEachAsync(async user =>
-                            Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)));
+                .Select(async user =>
+                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)))
+                .ToEnumerable();
+
+            await Task.WhenAll(tasks);
         }
     }
 }
