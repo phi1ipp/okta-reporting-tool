@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -26,6 +25,7 @@ namespace reporting_tool
         /// <param name="config">Okta Configuration object</param>
         /// <param name="fileInfo">File with UUID "comma separated list of groups"</param>
         /// <param name="action">String [add | remove] to indicate the operation for the given list of groups</param>
+        /// <param name="grpName">String representing group(s) to be added or removed to every user</param>
         public ManageGroups(OktaConfig config, FileInfo fileInfo, string action, string grpName = null) : base(config)
         {
             _fileInfo = fileInfo;
