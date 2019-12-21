@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -55,13 +56,26 @@ namespace reporting_tool
                 return;
             }
 
+            var semaphore = new SemaphoreSlim(8);
+            
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             var tasks = OktaClient.Groups
                 .ListGroupUsers(grpId)
                 .Where(user => _filter(user))
                 .Select(async user =>
-                    Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs)))
+                {
+                    await semaphore.WaitAsync();
+
+                    try
+                    {
+                        Console.WriteLine(await user.PrintAttributesAsync(_attrs, OktaClient, _ofs));
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                })
                 .ToEnumerable();
 
             await Task.WhenAll(tasks);
