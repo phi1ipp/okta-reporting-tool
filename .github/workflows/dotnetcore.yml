@@ -7,22 +7,21 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:
-    - run: mkdir sdk && cd sdk
-      
+    steps:      
     - name: Checkout custom okta-sdk-dotnet
       uses: actions/checkout@v2
       with:
-          repository: 'phi1ipp/okta-sdk-dotnet'   
+          repository: 'phi1ipp/okta-sdk-dotnet'
+          path: './okta-sdk-dotnet'
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.100'
-    - name: Build custom SDK
-      run: cd src/Okta.Sdk && dotnet pack -c Release
-      
-    - run: cd .. && mkdir tool && cd tool
-      
+
+    - name: Build custom Okta SDK
+      run: cd okta-sdk-dotnet/src/Okta.Sdk && dotnet pack -c Release
+            
     - uses: actions/checkout@v1
       
-    - run: cd reporting-tool && dotnet add package Okta.Sdk -v 8.2.6 -s ../../sdk/Okta.Sdk/bin/Release && dotnet publish -c Release -r win10-x64
+    - run: cd reporting-tool && dotnet add package Okta.Sdk -v 8.2.6 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release && dotnet publish -c Release -r win10-x64
