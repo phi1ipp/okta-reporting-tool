@@ -16,6 +16,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.100'
-    - name: Build with dotnet
-      run: dotnet build --configuration Release
+    - name: Build custom SDK
+      run: cd src/Okta.Sdk && dotnet package
     - uses: actions/checkout@v1
