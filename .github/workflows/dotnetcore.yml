@@ -22,6 +22,8 @@ jobs:
     - name: Build custom Okta SDK
       run: cd okta-sdk-dotnet/src/Okta.Sdk && dotnet pack -c Release
             
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        path: './tool' 
       
-    - run: cd reporting-tool && dotnet add package Okta.Sdk -v 8.2.6 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release && dotnet publish -c Release -r win10-x64
+    - run: cd tool/reporting-tool && dotnet add package Okta.Sdk -v 8.2.6 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release && dotnet publish -c Release -r win10-x64
