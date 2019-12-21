@@ -24,3 +24,5 @@ jobs:
     - run: cd .. && mkdir tool && cd tool
       
     - uses: actions/checkout@v1
+    - run: dotnet add Okta.Sdk -v 8.2.6 -s ../sdk/Okta.Sdk/bin/Release
+    - run: dotnet publish -c Release -r win10-x64
