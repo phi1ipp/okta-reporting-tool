@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout custom okta-sdk-dotnet
+      uses: actions/checkout@v2
       with:
-        repository: 'okta/okta-sdk-dotnet'
-        ref: 'v1.4.1'
-    - uses: actions/checkout@v1
+          repository: 'phi1ipp/okta-sdk-dotnet'   
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.100'
     - name: Build with dotnet
       run: dotnet build --configuration Release
+    - uses: actions/checkout@v1
