@@ -17,5 +17,5 @@ jobs:
       with:
         dotnet-version: '3.1.100'
     - name: Build custom SDK
-      run: cd src/Okta.Sdk && dotnet package
+      run: cd src/Okta.Sdk && dotnet pack
     - uses: actions/checkout@v1
