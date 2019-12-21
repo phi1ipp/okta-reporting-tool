@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - run: mkdir sdk && cd sdk
+      
     - name: Checkout custom okta-sdk-dotnet
       uses: actions/checkout@v2
       with:
@@ -19,7 +21,6 @@ jobs:
     - name: Build custom SDK
       run: cd src/Okta.Sdk && dotnet pack -c Release
       
-    - name: Setup Nuget.exe
-      run: dotnet nuget add bin/Release/Okta.Sdk.8.2.6.nupkg -Source /tmp/pkg
+    - run: cd .. && mkdir tool && cd tool
       
     - uses: actions/checkout@v1
