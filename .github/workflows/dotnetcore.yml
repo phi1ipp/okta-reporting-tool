@@ -18,4 +18,8 @@ jobs:
         dotnet-version: '3.1.100'
     - name: Build custom SDK
       run: cd src/Okta.Sdk && dotnet pack
+      
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+      
     - uses: actions/checkout@v1
