@@ -74,12 +74,13 @@ namespace reporting_tool
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, FileInfo, string>(async (appLabel, input, ofs) =>
+                handler: CommandHandler.Create<string, FileInfo, bool, string>(async (appLabel, input, all, ofs) =>
                 {
-                    await new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
+                    await new AppUserReport(oktaConfig, appLabel, input, all, ofs).Run();
                 }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
+            appAssignmentCmd.AddOption(new Option("--all", "output all application users", new Argument<bool>()));
             appAssignmentCmd.AddOption(optionInputFile);
             root.AddCommand(appAssignmentCmd);
 

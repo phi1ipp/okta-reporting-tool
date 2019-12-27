@@ -15,6 +15,7 @@ namespace reporting_tool
         private readonly string _appLabel;
         private readonly string _ofs;
         private readonly FileInfo _input;
+        private readonly bool _all;
 
         /// <summary>
         /// Public constructor
@@ -22,12 +23,15 @@ namespace reporting_tool
         /// <param name="config">Okta Config instance</param>
         /// <param name="appLabel">Application label</param>
         /// <param name="input">Input file with list of users</param>
+        /// <param name="all">Defines if all application users should be printed</param>
         /// <param name="ofs">Output field separator</param>
-        public AppUserReport(OktaConfig config, string appLabel, FileInfo input, string ofs = ",") : base(config)
+        public AppUserReport(OktaConfig config, string appLabel, FileInfo input, bool all = true, string ofs = ",") :
+            base(config)
         {
             _ofs = ofs;
             _appLabel = appLabel;
             _input = input;
+            _all = _input == null || all;
         }
 
         /// <inheritdoc />
@@ -47,6 +51,21 @@ namespace reporting_tool
                 throw new Exception($"Application {_appLabel} doesn't exist");
             }
 
+            if (_all)
+            {
+                await OktaClient.Applications
+                    .ListApplicationUsers(appId)
+                    .ForEachAsync(appUser =>
+                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}"));
+            }
+            else
+            {
+                await PrintFiltered(appId);
+            }
+        }
+
+        private async Task PrintFiltered(string appId)
+        {
             var lines = _input == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_input.FullName);
