@@ -55,14 +55,15 @@ namespace reporting_tool
             root.AddCommand(cCommand);
 
             var groupMembershipWithFilter = new Command("groupMembership",
-                handler: CommandHandler.Create<string, string, string, string>(
-                    (grpName, filter, attrs, ofs) =>
-                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs, ofs)
+                handler: CommandHandler.Create<string, string, string, FileInfo, string>(
+                    (grpName, filter, attrs, input, ofs) =>
+                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs, input, ofs)
                             .Run()));
             groupMembershipWithFilter.AddOption(optionGroupName);
             groupMembershipWithFilter.AddOption(optionFilter);
             groupMembershipWithFilter.AddOption(optionAttrs);
             groupMembershipWithFilter.AddOption(optionOfs);
+            groupMembershipWithFilter.AddOption(optionInputFile);
             root.AddCommand(groupMembershipWithFilter);
 
             var eCommand = new Command("listApps",
