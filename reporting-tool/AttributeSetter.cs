@@ -43,7 +43,7 @@ namespace reporting_tool
 
             _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            if (string.IsNullOrWhiteSpace(attrValue)) return;
+            if (attrValue == null) return;
 
             _attrValues = Regex.Split(attrValue);
             if (_attrValues.Count() < _attrNames.Count())
