@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace reporting_tool
     public class GroupMembersReportWithUserFilter : OktaAction
     {
         private readonly string _grpName;
+        private readonly FileInfo _input;
         private readonly IEnumerable<string> _attrs;
         private readonly Func<IUser, bool> _filter;
         private readonly string _ofs;
@@ -24,11 +26,13 @@ namespace reporting_tool
         /// <param name="grpName">Group name</param>
         /// <param name="userFilter">not implemented yet</param>
         /// <param name="userAttrList">List of attributes to output for each user</param>
+        /// <param name="input">File with the list of groups</param>
         /// <param name="ofs">Output field separator</param>
         public GroupMembersReportWithUserFilter(OktaConfig config, string grpName, string userFilter,
-            string userAttrList, string ofs = ",") : base(config)
+            string userAttrList, FileInfo input = null, string ofs = ",") : base(config)
         {
             _grpName = grpName;
+            _input = input;
             _ofs = ofs;
 
             _attrs = string.IsNullOrEmpty(userAttrList)
@@ -45,19 +49,42 @@ namespace reporting_tool
         /// <returns></returns>
         public override async Task Run()
         {
+            var lines = _input == null
+                ? _grpName == null ? Program.ReadConsoleLines() : new List<string>{_grpName}
+                : File.ReadLines(_input.FullName);
+            
+            var semaphore = new SemaphoreSlim(8);
+            
+            var tasks = lines.Select(async line =>
+            {
+                await semaphore.WaitAsync();
+
+                try
+                {
+                    await ListGroupMember(line, semaphore);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+        }
+
+        private async Task ListGroupMember(string grpName, SemaphoreSlim semaphore)
+        {
             var grpId = await OktaClient.Groups
-                .ListGroups(q: _grpName)
+                .ListGroups(q: grpName)
                 .Select(grp => grp.Id)
                 .FirstOrDefault();
 
             if (grpId == null)
             {
-                Console.WriteLine($"Group \"{_grpName}\" doesn't exist");
+                Console.WriteLine($"Group \"{grpName}\" doesn't exist");
                 return;
             }
 
-            var semaphore = new SemaphoreSlim(8);
-            
             Console.WriteLine(UserExtensions.PrintUserAttributesHeader(_attrs, _ofs));
 
             var tasks = OktaClient.Groups

@@ -43,7 +43,7 @@ namespace reporting_tool
 
             _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            if (string.IsNullOrWhiteSpace(attrValue)) return;
+            if (attrValue == null) return;
 
             _attrValues = Regex.Split(attrValue);
             if (_attrValues.Count() < _attrNames.Count())
@@ -82,7 +82,9 @@ namespace reporting_tool
                         var lstValues = values.ToList();
                         if (lstValues.Count() != _attrNames.Count())
                         {
-                            Console.WriteLine("Attribute values count does not match attribute names count");
+                            Console.WriteLine(
+                                $"Updating user {userId}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} " +
+                                "- Attribute values count does not match attribute names count");
                             return;
                         }
 
@@ -118,7 +120,7 @@ namespace reporting_tool
                                     if (!_writeEmpty && string.IsNullOrEmpty(attrVal)) return;
 
                                     // check if value is a list
-                                    if (Regex.IsMatch(attrVal,"^\"\\([^)]*\\)\"$"))
+                                    if (Regex.IsMatch(attrVal, "^\"\\([^)]*\\)\"$"))
                                     {
                                         var arrValues =
                                             ListRegex.Split(attrVal.Substring(2, attrVal.Length - 4))
