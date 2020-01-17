@@ -53,7 +53,7 @@ namespace reporting_tool
 
             var semaphore = new SemaphoreSlim(8);
 
-            await userBase.ForEachAsync(async user =>
+            var tasks = userBase.ToEnumerable().Select(async user => 
             {
                 await semaphore.WaitAsync();
                 try
@@ -65,6 +65,8 @@ namespace reporting_tool
                     semaphore.Release();
                 }
             });
+
+            await Task.WhenAll(tasks);
         }
     }
 }
