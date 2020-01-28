@@ -120,14 +120,15 @@ namespace reporting_tool
             root.AddCommand(userLifeCycle);
 
             var manageGroups = new Command("manageGroups",
-                handler: CommandHandler.Create<FileInfo, string, string>(async (input, action, grpName) =>
+                handler: CommandHandler.Create<FileInfo, string, string, bool>(async (input, action, grpName, idUsed) =>
                 {
-                    await new ManageGroups(oktaConfig, input, action, grpName).Run();
+                    await new ManageGroups(oktaConfig, input, action, grpName, idUsed).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
             manageGroups.AddOption(optionOfs);
             manageGroups.AddOption(optionGroupName);
             manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
+            manageGroups.AddOption(new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
             root.AddCommand(manageGroups);
 
             var injectedArgs = args.All(s => s != "-OFS")

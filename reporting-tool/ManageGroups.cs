@@ -17,7 +17,8 @@ namespace reporting_tool
         private readonly FileInfo _fileInfo;
         private readonly string _action;
         private readonly string _grpName;
-        private IDictionary<string, string> _dictGroupId = new Dictionary<string, string>();
+        private readonly bool _grpIdUsed;
+        private readonly IDictionary<string, string> _dictGroupId = new Dictionary<string, string>();
 
         /// <summary>
         /// Public constructor
@@ -26,7 +27,8 @@ namespace reporting_tool
         /// <param name="fileInfo">File with UUID "comma separated list of groups"</param>
         /// <param name="action">String [add | remove] to indicate the operation for the given list of groups</param>
         /// <param name="grpName">String representing group(s) to be added or removed to every user</param>
-        public ManageGroups(OktaConfig config, FileInfo fileInfo, string action, string grpName = null) : base(config)
+        /// <param name="groupIdUsed">true if group UUID used instead of name</param>
+        public ManageGroups(OktaConfig config, FileInfo fileInfo, string action, string grpName = null, bool groupIdUsed = false) : base(config)
         {
             _fileInfo = fileInfo;
 
@@ -35,6 +37,7 @@ namespace reporting_tool
 
             _action = action;
             _grpName = grpName;
+            _grpIdUsed = groupIdUsed;
         }
 
         /// <summary>
@@ -96,7 +99,12 @@ namespace reporting_tool
             var tasks =
                 groups.Select(async grp =>
                 {
-                    if (!_dictGroupId.TryGetValue(grp, out var grpId))
+                    string grpId;
+                    
+                    if (_grpIdUsed)
+                        grpId = grp;
+                        
+                    else if (!_dictGroupId.TryGetValue(grp, out grpId))
                     {
                         grpId = await OktaClient.Groups
                             .ListGroups(q: grp)
