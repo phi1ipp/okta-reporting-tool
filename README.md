@@ -126,6 +126,8 @@ username1,attr1_value1[,"attr2 val2",...]
 username2,attr1_value2[,attr2_val3,...]
 ```
 
+Attribute can be wiped by providing "" for attribute value either in an input file or on a command line with a corresponding switch on a command line `--writeEmpty true`.
+
 Examples:
 * `./reporting-tool setAttribute --attrName LOA --attrValue "3" --input /tmp/loa` will set all users' LOA, whose usernames are listed in `/tmp/loa`, to "3"
 * `./reporting-tool setAttribute --attrName LOA --input /tmp/loa` will set all users' LOA to value listed in the second column in `/tmp/loa`
@@ -139,6 +141,7 @@ may be a standard input
 --input     <file_name>
 --attrName  <user_profile_attribute_name>
 --attrValue <value_to_assign_to_all_given_users> (optional)
+--writeEmpty true (optional)
 ```
 
 ### manageGroups
