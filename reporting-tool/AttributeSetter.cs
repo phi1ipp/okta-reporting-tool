@@ -43,9 +43,10 @@ namespace reporting_tool
 
             _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            if (string.IsNullOrWhiteSpace(attrValue)) return;
-
-            _attrValues = Regex.Split(attrValue);
+            _attrValues = string.IsNullOrWhiteSpace(attrValue) 
+                ? new []{""}
+                : Regex.Split(attrValue);
+            
             if (_attrValues.Count() < _attrNames.Count())
             {
                 throw new Exception("List of values provided less than the number of fields to populate");
@@ -64,7 +65,7 @@ namespace reporting_tool
 
             // produce map of uid -> attrValue
             // if _attrVal is set -> override what comes from a source input
-            var uidToValue = _attrValues == null
+            var uidToValue = _attrValues == null && ! _writeEmpty
                 ? lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
                     .ToDictionary(lst => lst.First(), lst => Regex.Split(lst.Last()) as IEnumerable<string>)
@@ -138,13 +139,16 @@ namespace reporting_tool
                                 await oktaUser.UpdateAsync();
 
                                 Console.WriteLine(
-                                    $"Updating user {userId}: set attributes {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - success");
+                                    $"Updating user {userId}: set attributes {string.Join(",", _attrNames)} " +
+                                    $"to {string.Join( ",", lstValues.Select(val => string.IsNullOrEmpty(val) ? "\"\"" : val))} " +
+                                    "- success");
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(
-                                    $"Updating user {userId}: set attribute {string.Join(",", _attrNames)} to {string.Join(",", lstValues)} - update failed " +
-                                    $"({e})");
+                                    $"Updating user {userId}: set attribute {string.Join(",", _attrNames)} " +
+                                    $"to {string.Join(",", lstValues.Select(val => string.IsNullOrEmpty(val) ? "\"\"" : val))} " +
+                                    $"- update failed ({e})");
                             }
                         }
                         finally
