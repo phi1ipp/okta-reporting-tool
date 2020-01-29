@@ -43,10 +43,9 @@ namespace reporting_tool
 
             _attrNames = attrName.Contains(',') ? attrName.Split(',') : new[] {attrName};
 
-            _attrValues = string.IsNullOrWhiteSpace(attrValue) 
-                ? new []{""}
-                : Regex.Split(attrValue);
-            
+            if (attrValue == null) return;
+
+            _attrValues = Regex.Split(attrValue);
             if (_attrValues.Count() < _attrNames.Count())
             {
                 throw new Exception("List of values provided less than the number of fields to populate");
