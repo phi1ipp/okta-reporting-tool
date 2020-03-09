@@ -119,10 +119,10 @@ namespace reporting_tool
             userLifeCycle.AddOption(new Option("--action", "activate, deactivate or delete", new Argument<string>()));
             root.AddCommand(userLifeCycle);
 
-            var manageGroups = new Command("manageGroups",
+            var manageGroups = new Command("manageMembership",
                 handler: CommandHandler.Create<FileInfo, string, string, bool>(async (input, action, grpName, idUsed) =>
                 {
-                    await new ManageGroups(oktaConfig, input, action, grpName, idUsed).Run();
+                    await new ManageMembership(oktaConfig, input, action, grpName, idUsed).Run();
                 }));
             manageGroups.AddOption(optionInputFile);
             manageGroups.AddOption(optionOfs);

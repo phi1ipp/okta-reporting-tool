@@ -21,7 +21,7 @@ Commands:
  userReport
  userSearchReport
  userLifecycle
- manageGroups
+ manageMembership
 ```
 ### Configuration
 All the configuration is held in `appsettings.json` file, which includes the following section:
@@ -144,7 +144,7 @@ may be a standard input
 --writeEmpty true (optional)
 ```
 
-### manageGroups
+### manageMembership
 This action is to manage/report user's group membership in Okta. To add/remove group membership the input has to be formatted the 
 following way
 ```
