@@ -146,7 +146,7 @@ may be a standard input
 
 ### manageMembership
 This action is to manage/report user's group membership in Okta. To add/remove group membership the input has to be formatted the 
-following way
+following way (group names can be substituted with group UUIDs, if `--idUsed true` switch is applied)
 ```
 username1,"group 1","group 2"
 username2,"group 2","group n"
@@ -157,7 +157,9 @@ The action accepts the following switches, where `--input` can be skipped if sta
 ```
 --input  <file_name>
 --action [add | remove | display]
+--grpName <group name(s) or UUIDs>
 ```
+The last switch given on the command line allows to assign the list of users to the same group(s).
 
 ### listGroups
 It's a basic report to extract all groups from Okta with their UUID and name
