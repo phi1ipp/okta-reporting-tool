@@ -46,7 +46,7 @@ namespace reporting_tool
                         switch (_action)
                         {
                             case "activate":
-                                await user.ActivateAsync();
+                                await user.ActivateAsync(sendEmail: false);
                                 Console.WriteLine($"{userName} activated");
                                 break;
                             case "deactivate":
