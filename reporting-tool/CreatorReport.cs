@@ -54,9 +54,10 @@ namespace reporting_tool
                     {
                         await semaphore.WaitAsync();
 
+                        var userId = "";
                         try
                         {
-                            var userId = line.Trim().Split(' ', ',').First();
+                            userId = line.Trim().Split(' ', ',').First();
 
                             Console.WriteLine(
                                 userId + _ofs +
@@ -73,6 +74,10 @@ namespace reporting_tool
                                     })
                                     .FirstOrDefault()
                                     .Unwrap());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"{userId} - exception searching logs!!! {e.Message}");
                         }
                         finally
                         {
