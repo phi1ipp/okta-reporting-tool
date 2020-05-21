@@ -75,13 +75,12 @@ namespace reporting_tool
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, FileInfo, bool, string>(async (appLabel, input, all, ofs) =>
+                handler: CommandHandler.Create<string, FileInfo, string>(async (appLabel, input, ofs) =>
                 {
-                    await new AppUserReport(oktaConfig, appLabel, input, all, ofs).Run();
+                    await new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
                 }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
-            appAssignmentCmd.AddOption(new Option("--all", "output all application users", new Argument<bool>()));
             appAssignmentCmd.AddOption(optionInputFile);
             root.AddCommand(appAssignmentCmd);
 
@@ -132,6 +131,16 @@ namespace reporting_tool
             manageGroups.AddOption(new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
             root.AddCommand(manageGroups);
 
+            var groupRename = new Command("groupRename",
+                handler: CommandHandler.Create<FileInfo, bool>(async (input, idUsed) =>
+                {
+                    await new GroupRename(oktaConfig, input, idUsed).Run();
+                }));
+            groupRename.AddOption(optionInputFile);
+            groupRename.AddOption(new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
+            groupRename.AddOption(optionOfs);
+            root.AddCommand(groupRename);
+            
             var injectedArgs = args.All(s => s != "-OFS")
                 ? args.Concat(new[] {"-OFS", ","}).ToArray()
                 : args;
