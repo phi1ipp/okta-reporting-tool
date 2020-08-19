@@ -62,7 +62,7 @@ namespace reporting_tool
                                 Console.WriteLine($"{userName} unsuspended");
                                 break;
                             case "delete":
-                                if (user.Status != UserStatus.Suspended)
+                                if (user.Status != UserStatus.Deprovisioned)
                                     await user.DeactivateAsync();
                                 
                                 await user.DeactivateOrDeleteAsync();
