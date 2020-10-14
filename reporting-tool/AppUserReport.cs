@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,6 +17,7 @@ namespace reporting_tool
         private readonly string _ofs;
         private readonly FileInfo _input;
         private readonly bool _all;
+        private readonly IEnumerable<string> _attrs;
 
         /// <summary>
         /// Public constructor
@@ -23,15 +25,18 @@ namespace reporting_tool
         /// <param name="config">Okta Config instance</param>
         /// <param name="appLabel">Application label</param>
         /// <param name="input">Input file with list of users</param>
-        /// <param name="all">Defines if all application users should be printed</param>
         /// <param name="ofs">Output field separator</param>
-        public AppUserReport(OktaConfig config, string appLabel, FileInfo input, bool all = true, string ofs = ",") :
+        public AppUserReport(OktaConfig config, string appLabel, string attrs, FileInfo input, string ofs = ",") :
             base(config)
         {
+            _attrs = string.IsNullOrEmpty(attrs)
+                ? Enumerable.Empty<string>()
+                : attrs.Split(",").ToHashSet();
+            
             _ofs = ofs;
             _appLabel = appLabel;
             _input = input;
-            _all = _input == null || all;
+            _all = _input == null;
         }
 
         /// <inheritdoc />
@@ -56,7 +61,8 @@ namespace reporting_tool
                 await OktaClient.Applications
                     .ListApplicationUsers(appId)
                     .ForEachAsync(appUser =>
-                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}"));
+                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser))
+                    );
             }
             else
             {
@@ -85,19 +91,17 @@ namespace reporting_tool
                         var appUser = await OktaClient.Applications
                             .GetApplicationUserAsync(appId, userId);
 
-                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}");
+                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser));
                     }
                     catch (OktaApiException e)
                     {
                         Console.WriteLine(e.Message.Contains("Not found")
                             ? $"{userId} !!! user not found"
                             : $"{userId} !!! exception fetching the user: {e.Message}");
-                        return;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine($"{userId} !!! exception fetching the user: {e}");
-                        return;
                     }
                     finally
                     {
@@ -106,6 +110,13 @@ namespace reporting_tool
                 });
 
             await Task.WhenAll(tasks);
+        }
+
+        private string OutputAppProfile(IAppUser appUser)
+        {
+            return appUser.Profile.GetData()
+                .Where(pair => _attrs.Contains(pair.Key) || !_attrs.Any())
+                .Aggregate("{}", (s, pair) => s.Replace("}", pair.Value == null ? $",{pair.Key}:null}}" : $",{pair.Key}:{pair.Value}}}"));
         }
     }
 }
