@@ -75,12 +75,13 @@ namespace reporting_tool
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, FileInfo, string>(async (appLabel, input, ofs) =>
+                handler: CommandHandler.Create<string, string, FileInfo, string>(async (appLabel, attrs, input, ofs) =>
                 {
-                    await new AppUserReport(oktaConfig, appLabel, input, ofs).Run();
+                    await new AppUserReport(oktaConfig, appLabel, attrs,input, ofs).Run();
                 }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
+            appAssignmentCmd.AddOption(optionAttrs);
             appAssignmentCmd.AddOption(optionInputFile);
             root.AddCommand(appAssignmentCmd);
 
@@ -116,7 +117,7 @@ namespace reporting_tool
                     await new UserLifecycle(oktaConfig, input, action).Run()));
             userLifeCycle.AddOption(optionOfs);
             userLifeCycle.AddOption(optionInputFile);
-            userLifeCycle.AddOption(new Option("--action", "activate, deactivate or delete", new Argument<string>()));
+            userLifeCycle.AddOption(new Option("--action", "activate, deactivate, suspend, unsuspend or delete", new Argument<string>()));
             root.AddCommand(userLifeCycle);
 
             var manageGroups = new Command("manageMembership",
