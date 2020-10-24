@@ -22,6 +22,7 @@ namespace reporting_tool
             var optionGroupName = new Option("--grpName", "group name to run report for", new Argument<string>());
             var optionSearch = new Option("--search", "search expression", new Argument<string>());
             var optionFilter = new Option("--filter", "filter expression", new Argument<string>());
+            var optionAll = new Option("--all", "all records", new Argument<bool>());
 
             var aCommand = new Command("findCreator",
                 handler: CommandHandler.Create<FileInfo, string, string>(
@@ -75,14 +76,15 @@ namespace reporting_tool
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, string, FileInfo, string>(async (appLabel, attrs, input, ofs) =>
+                handler: CommandHandler.Create<string, string, FileInfo, bool, string>(async (appLabel, attrs, input, all, ofs) =>
                 {
-                    await new AppUserReport(oktaConfig, appLabel, attrs,input, ofs).Run();
+                    await new AppUserReport(oktaConfig, appLabel, attrs, input, all, ofs).Run();
                 }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
             appAssignmentCmd.AddOption(optionAttrs);
             appAssignmentCmd.AddOption(optionInputFile);
+            appAssignmentCmd.AddOption(optionAll);
             root.AddCommand(appAssignmentCmd);
 
             var listGroups = new Command("listGroups",

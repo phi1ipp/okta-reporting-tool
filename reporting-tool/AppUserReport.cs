@@ -24,9 +24,11 @@ namespace reporting_tool
         /// </summary>
         /// <param name="config">Okta Config instance</param>
         /// <param name="appLabel">Application label</param>
+        /// <param name="attrs">Attributes to be reported for appUser profile</param>
         /// <param name="input">Input file with list of users</param>
+        /// <param name="all">Output all users</param>
         /// <param name="ofs">Output field separator</param>
-        public AppUserReport(OktaConfig config, string appLabel, string attrs, FileInfo input, string ofs = ",") :
+        public AppUserReport(OktaConfig config, string appLabel, string attrs, FileInfo input, bool all = true, string ofs = ",") :
             base(config)
         {
             _attrs = string.IsNullOrEmpty(attrs)
@@ -35,8 +37,23 @@ namespace reporting_tool
             
             _ofs = ofs;
             _appLabel = appLabel;
-            _input = input;
-            _all = _input == null;
+            _all = all;
+            if (all)
+            {
+                if (input != null)
+                {
+                    Console.WriteLine("All records selected, ignoring --input");
+                }
+            }
+            else
+            {
+                _input = input;
+                
+                if (input == null)
+                {
+                    Console.WriteLine("Filtered user list selected but no --input provided, reading user list from standard input... (provide --all true otherwise)");
+                }
+            }
         }
 
         /// <inheritdoc />
