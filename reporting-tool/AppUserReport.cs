@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -89,6 +90,8 @@ namespace reporting_tool
 
         private async Task PrintFiltered(string appId)
         {
+            var guidRegex = new Regex("^00.{15}297$");
+            
             var lines = _input == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_input.FullName);
@@ -103,10 +106,22 @@ namespace reporting_tool
 
                     await semaphor.WaitAsync();
 
+                    string userGuid;
+                        
                     try
                     {
+                        if (!guidRegex.IsMatch(userId))
+                        {
+                            var user = await OktaClient.Users.GetUserAsync(userId);
+                            userGuid = user.Id;
+                        }
+                        else
+                        {
+                            userGuid = userId;
+                        }
+
                         var appUser = await OktaClient.Applications
-                            .GetApplicationUserAsync(appId, userId);
+                            .GetApplicationUserAsync(appId, userGuid);
 
                         Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser));
                     }
