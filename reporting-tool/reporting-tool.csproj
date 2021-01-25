@@ -11,7 +11,7 @@
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.7.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
-    <PackageReference Include="Okta.Sdk" Version="8.2.6" />
+    <PackageReference Include="Okta.Sdk" Version="8.2.7" />
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.2.0-alpha.19174.3" />
   </ItemGroup>
 
