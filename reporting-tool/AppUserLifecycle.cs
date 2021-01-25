@@ -12,49 +12,30 @@ namespace reporting_tool
     /// <summary>
     /// Class to run a report for a specific Okta group and apply an additional filter to users from the group
     /// </summary>
-    public class AppUserReport : OktaAction
+    public class AppUserLifecycle : OktaAction
     {
         private readonly string _appLabel;
+        private readonly string _action;
+        private readonly IEnumerable<string> _attrs;
         private readonly string _ofs;
         private readonly FileInfo _input;
-        private readonly bool _all;
-        private readonly IEnumerable<string> _attrs;
 
         /// <summary>
         /// Public constructor
         /// </summary>
         /// <param name="config">Okta Config instance</param>
         /// <param name="appLabel">Application label</param>
-        /// <param name="attrs">Attributes to be reported for appUser profile</param>
         /// <param name="input">Input file with list of users</param>
-        /// <param name="all">Output all users</param>
+        /// <param name="action">Add/remove user to the application</param>
         /// <param name="ofs">Output field separator</param>
-        public AppUserReport(OktaConfig config, string appLabel, string attrs, FileInfo input, bool all = true, string ofs = ",") :
+        public AppUserLifecycle(OktaConfig config, string appLabel, FileInfo input, string action, string attrs, string ofs = ",") :
             base(config)
         {
-            _attrs = string.IsNullOrEmpty(attrs)
-                ? Enumerable.Empty<string>()
-                : attrs.Split(",").ToHashSet();
-            
             _ofs = ofs;
             _appLabel = appLabel;
-            _all = all;
-            if (all)
-            {
-                if (input != null)
-                {
-                    Console.WriteLine("All records selected, ignoring --input");
-                }
-            }
-            else
-            {
-                _input = input;
-                
-                if (input == null)
-                {
-                    Console.WriteLine("Filtered user list selected but no --input provided, reading user list from standard input... (provide --all true otherwise)");
-                }
-            }
+            _action = action;
+            _input = input;
+            _attrs = attrs.Split(",");
         }
 
         /// <inheritdoc />
@@ -73,25 +54,12 @@ namespace reporting_tool
             {
                 throw new Exception($"Application {_appLabel} doesn't exist");
             }
-
-            if (_all)
-            {
-                await OktaClient.Applications
-                    .ListApplicationUsers(appId)
-                    .ForEachAsync(appUser =>
-                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser))
-                    );
-            }
-            else
-            {
-                await PrintFiltered(appId);
-            }
         }
 
         private async Task PrintFiltered(string appId)
         {
             var guidRegex = new Regex("^00.{15}297$");
-            
+
             var lines = _input == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_input.FullName);
@@ -107,7 +75,7 @@ namespace reporting_tool
                     await semaphor.WaitAsync();
 
                     string userGuid;
-                        
+
                     try
                     {
                         if (!guidRegex.IsMatch(userId))
@@ -148,7 +116,9 @@ namespace reporting_tool
         {
             return appUser.Profile.GetData()
                 .Where(pair => _attrs.Contains(pair.Key) || !_attrs.Any())
-                .Aggregate("{}", (s, pair) => s.Replace("}", pair.Value == null ? $",{pair.Key}:null}}" : $",{pair.Key}:{pair.Value}}}"));
+                .Aggregate("{}",
+                    (s, pair) => s.Replace("}",
+                        pair.Value == null ? $",{pair.Key}:null}}" : $",{pair.Key}:{pair.Value}}}"));
         }
     }
 }
