@@ -38,16 +38,27 @@ namespace reporting_tool
             var tasks = lines
                 .Select(async line =>
                 {
-                    var userName = line.Trim().Split(' ', ',').First();
+                    var parts = line.Trim().Split(' ', ',');
+                    var userName = parts[0];
+                    
                     try
                     {
                         var user = await OktaClient.Users.GetUserAsync(userName);
 
                         switch (_action)
                         {
+                            case "set_pwd":
+                                user.Credentials.Password = new PasswordCredential {Value = parts[1]};
+                                Console.WriteLine($"{userName} set password to {parts[1]}");
+                                await user.UpdateAsync();
+                                break;
                             case "activate":
                                 await user.ActivateAsync(sendEmail: false);
                                 Console.WriteLine($"{userName} activated");
+                                break;
+                            case "activate_email":
+                                await user.ActivateAsync(true);
+                                Console.WriteLine($"{userName} activated and email sent");
                                 break;
                             case "deactivate":
                                 await user.DeactivateAsync();
