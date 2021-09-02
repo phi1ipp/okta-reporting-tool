@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -35,12 +36,16 @@ namespace reporting_tool
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
+            var semaphore = new SemaphoreSlim(8);
+            
             var tasks = lines
                 .Select(async line =>
                 {
                     var parts = line.Trim().Split(' ', ',');
                     var userName = parts[0];
                     
+                    await semaphore.WaitAsync();
+
                     try
                     {
                         var user = await OktaClient.Users.GetUserAsync(userName);
@@ -75,7 +80,7 @@ namespace reporting_tool
                             case "delete":
                                 if (user.Status != UserStatus.Deprovisioned)
                                     await user.DeactivateAsync();
-                                
+
                                 await user.DeactivateOrDeleteAsync();
                                 Console.WriteLine($"{userName} deleted");
                                 break;
@@ -101,6 +106,10 @@ namespace reporting_tool
                     catch (Exception e)
                     {
                         Console.WriteLine(userName + " exception processing the user: " + e);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
                     }
                 });
 
