@@ -17,6 +17,7 @@ Commands:
  groupMembership
  listApps
  appUser
+ appUserLifecycle
  listGroups
  userReport
  userSearchReport
@@ -168,11 +169,20 @@ It's a basic report to extract all groups from Okta with their UUID and name
 It's a basic report to extract all applications from Okta with their UUID, name and display name
 
 ### appUser
-This report allows to find if users are assigned to an application specified by `--appLabel` and display their application username.
+This report allows to find if users are assigned to an application specified by `--appLabel` and display their application username. This report is obsolete and replaced fully by `appUserLifecycle`
 
 ```
 --input     <file_name with user_ids>
 --appLabel  <application label>
+```
+### appUserLifecycle
+This action allows getting application user profile information, when `--action display` or removing/unassigning of application user profile with `--action delete`
+
+```
+--appLabel  <application label>
+--action    <displan|delete>
+--attrs     <list of application user profile attributes to display>
+--input     <filename for list of user IDs for which to do display/delete>
 ```
 ### userLifecycle
 This action is to manage user lifecycle (activate, deactivate, delete) for all users given in the input file or standard input
