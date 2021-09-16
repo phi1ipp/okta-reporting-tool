@@ -20,7 +20,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.100'
+        dotnet-version: '5.0.x'
 
     - name: Build custom Okta SDK
       run: cd okta-sdk-dotnet/src/Okta.Sdk && dotnet pack -c Release
@@ -29,8 +29,8 @@ jobs:
       with:
         path: './tool' 
       
-    - run: cd tool/reporting-tool && dotnet add package Okta.Sdk -v 8.2.7 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release  
-            && dotnet publish -c Release -r win10-x64 && cd bin/Release/netcoreapp3.0/win10-x64/publish &&
+    - run: cd tool/reporting-tool && dotnet add package Okta.Sdk -v 9.5.1 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release  
+            && dotnet publish -c Release -r win10-x64 && cd bin/Release/net5.0/win10-x64/publish &&
             zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
             
     - name: Create Release
