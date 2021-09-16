@@ -30,7 +30,7 @@ jobs:
       with:
         path: './tool' 
       
-    - run: cd tool/reporting-tool && dotnet add package Okta.Sdk -v 9.5.1 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release  
+    - run: cd tool/reporting-tool && dotnet restore && dotnet add package Okta.Sdk -v 9.5.1 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release  
             && dotnet publish -c Release -r win10-x64 && cd bin/Release/net5.0/win10-x64/publish &&
             zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
             
