@@ -13,7 +13,7 @@ namespace reporting_tool
         /// Collection of non-profile attributes available for reporting and operations
         /// </summary>
         public static ICollection<string> NonProfileAttributes => new List<string>
-            {"status", "id", "created", "passwordChanged", "lastLogin", "provider", "transitioningToStatus"};
+            {"status", "id", "created", "passwordChanged", "lastLogin", "provider"};
 
         /// <summary>
         /// Collection of group attributes which user is a member of
@@ -34,17 +34,16 @@ namespace reporting_tool
         /// <returns></returns>
         public static string GetNonProfileAttribute(this IUser user, string attrName)
         {
-            return attrName switch
+            switch (attrName)
             {
-                "status" => user.Status,
-                "transitioningToStatus" => user.TransitioningToStatus,
-                "id" => user.Id,
-                "created" => $"{user.Created:yyyy/MM/dd}",
-                "passwordChanged" => $"{user.PasswordChanged:yyyy/MM/dd}",
-                "lastLogin" => $"{user.LastLogin:yyyy/MM/dd}",
-                "provider" => user.Credentials.Provider.Type.Value,
-                _ => ""
-            };
+                case "status": return user.Status;
+                case "id": return user.Id;
+                case "created": return $"{user.Created:yyyy/MM/dd}";
+                case "passwordChanged": return $"{user.PasswordChanged:yyyy/MM/dd}";
+                case "lastLogin": return $"{user.LastLogin:yyyy/MM/dd}";
+                case "provider": return user.Credentials.Provider.Type.Value;
+                default: return "";
+            }
         }
     }
 }

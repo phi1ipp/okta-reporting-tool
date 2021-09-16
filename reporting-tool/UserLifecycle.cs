@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -30,22 +29,18 @@ namespace reporting_tool
         /// <summary>
         /// Main executable method to perform activation
         /// </summary>
-        public override async Task Run()
+        public override Task Run()
         {
             var lines = _fileInfo == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
 
-            var semaphore = new SemaphoreSlim(8);
-            
             var tasks = lines
                 .Select(async line =>
                 {
                     var parts = line.Trim().Split(' ', ',');
                     var userName = parts[0];
                     
-                    await semaphore.WaitAsync();
-
                     try
                     {
                         var user = await OktaClient.Users.GetUserAsync(userName);
@@ -59,6 +54,10 @@ namespace reporting_tool
                                 break;
                             case "activate":
                                 await user.ActivateAsync(sendEmail: false);
+                                Console.WriteLine($"{userName} activated");
+                                break;
+                            case "reactivate":
+                                await user.ReactivateAsync(sendEmail: false);
                                 Console.WriteLine($"{userName} activated");
                                 break;
                             case "activate_email":
@@ -80,7 +79,7 @@ namespace reporting_tool
                             case "delete":
                                 if (user.Status != UserStatus.Deprovisioned)
                                     await user.DeactivateAsync();
-
+                                
                                 await user.DeactivateOrDeleteAsync();
                                 Console.WriteLine($"{userName} deleted");
                                 break;
@@ -94,10 +93,6 @@ namespace reporting_tool
                         {
                             Console.WriteLine(userName + " !!!!! user not found");
                         }
-                        else if (e.Message.StartsWith("Activation failed because the user is already active"))
-                        {
-                            Console.WriteLine($"{userName} is already active");
-                        }
                         else
                         {
                             Console.WriteLine(userName + " exception processing the user: " + e);
@@ -107,13 +102,9 @@ namespace reporting_tool
                     {
                         Console.WriteLine(userName + " exception processing the user: " + e);
                     }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
                 });
 
-            await Task.WhenAll(tasks);
+            return Task.WhenAll(tasks);
         }
     }
 }

@@ -77,7 +77,7 @@ namespace reporting_tool
             var grpId = await OktaClient.Groups
                 .ListGroups(q: grpName)
                 .Select(grp => grp.Id)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (grpId == null)
             {

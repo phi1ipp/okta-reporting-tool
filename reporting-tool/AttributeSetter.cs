@@ -96,7 +96,7 @@ namespace reporting_tool
                             try
                             {
                                 oktaUser = userId.Contains('/')
-                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userId}\"").First()
+                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userId}\"").FirstAsync()
                                     : await OktaClient.Users.GetUserAsync(userId);
                             }
                             catch (OktaApiException e)

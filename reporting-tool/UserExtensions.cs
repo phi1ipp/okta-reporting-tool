@@ -61,7 +61,7 @@ namespace reporting_tool
                 .ListUserGroups(user.Id)
                 .Select(grp =>
                     $"({grp.Profile.Name})")
-                .Aggregate(string.Concat) });
+                .AggregateAsync(string.Concat) });
 
             return string.Join(ofs, values);
         }

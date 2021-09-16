@@ -50,7 +50,7 @@ namespace reporting_tool
                     {
                         var group = _useIds
                             ? await OktaClient.Groups.GetGroupAsync(parts[0])
-                            : await OktaClient.Groups.ListGroups(parts[0]).First();
+                            : await OktaClient.Groups.ListGroups(parts[0]).FirstAsync();
 
                         group.Profile.Name = parts[1];
                         await group.UpdateAsync();

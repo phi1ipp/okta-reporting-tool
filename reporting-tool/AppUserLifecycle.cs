@@ -19,8 +19,6 @@ namespace reporting_tool
         private readonly IEnumerable<string> _attrs;
         private readonly string _ofs;
         private readonly FileInfo _input;
-        
-        private Regex guidRegex = new Regex("^00.{15}297$");
 
         /// <summary>
         /// Public constructor
@@ -50,23 +48,29 @@ namespace reporting_tool
             var appId = await OktaClient.Applications
                 .ListApplications(q: _appLabel)
                 .Select(app => app.Id)
-                .First();
+                .FirstAsync();
 
             if (appId == null)
             {
                 throw new Exception($"Application {_appLabel} doesn't exist");
             }
-            
+        }
+
+        private async Task PrintFiltered(string appId)
+        {
+            var guidRegex = new Regex("^00.{15}297$");
+
             var lines = _input == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_input.FullName);
 
             var semaphor = new SemaphoreSlim(8);
-            
+
             var tasks = lines
+                .AsParallel()
                 .Select(async line =>
                 {
-                    var userId = line.Split(new[] {' ', ','}, 2)[0];
+                    var userId = line.Split(new[] {' ', ','}, 1)[0];
 
                     await semaphor.WaitAsync();
 
@@ -84,24 +88,10 @@ namespace reporting_tool
                             userGuid = userId;
                         }
 
-                        switch (_action)
-                        {
-                            case "delete" :
-                                await OktaClient.Applications.DeleteApplicationUserAsync(appId, userGuid);
-                                Console.WriteLine($"{userGuid} removed from {_appLabel}");
-                                break;
-                            
-                            case "display" :
-                                var appUser = await OktaClient.Applications
-                                    .GetApplicationUserAsync(appId, userGuid);
+                        var appUser = await OktaClient.Applications
+                            .GetApplicationUserAsync(appId, userGuid);
 
-                                Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser));
-                                break;
-                            
-                            default:
-                                Console.WriteLine($"{_action} not supported");
-                                break;
-                        }
+                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser));
                     }
                     catch (OktaApiException e)
                     {
@@ -121,6 +111,7 @@ namespace reporting_tool
 
             await Task.WhenAll(tasks);
         }
+
         private string OutputAppProfile(IAppUser appUser)
         {
             return appUser.Profile.GetData()

@@ -65,11 +65,11 @@ namespace reporting_tool
                             ? new List<IUser>
                             {
                                 userName.Contains('/') 
-                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userName}\"").First()
+                                    ? await OktaClient.Users.ListUsers(search: $"profile.login eq \"{userName}\"").FirstAsync()
                                     : await OktaClient.Users.GetUserAsync(userName)
                             }
                             : await OktaClient.Users.ListUsers(search: $"profile.{_attrName} eq \"{userName}\"")
-                                .ToList();
+                                .ToListAsync();
 
                         if (users.Count == 0)
                         {

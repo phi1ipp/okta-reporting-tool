@@ -110,7 +110,7 @@ namespace reporting_tool
                         grpId = await OktaClient.Groups
                             .ListGroups(q: grp)
                             .Select(g => g.Id)
-                            .FirstOrDefault();
+                            .FirstOrDefaultAsync();
 
                         _dictGroupId[grp] = grpId;
                     }
@@ -129,7 +129,7 @@ namespace reporting_tool
                                 return $"{grp} added to {user.Profile.Login}";
 
                             case "remove":
-                                await OktaClient.Groups.RemoveGroupUserAsync(grpId, user.Id);
+                                await OktaClient.Groups.RemoveUserFromGroupAsync(grpId, user.Id);
                                 return $"{grp} removed from {user.Profile.Login}";
 
                             default:
@@ -161,7 +161,7 @@ namespace reporting_tool
                                    g.Profile.Name.Contains(' ')
                                        ? $"\"{g.Profile.Name}\""
                                        : g.Profile.Name)
-                               .ToList());
+                               .ToListAsync());
             }
             catch (Exception e)
             {

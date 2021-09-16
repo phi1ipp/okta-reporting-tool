@@ -27,12 +27,12 @@ namespace reporting_tool
         public override Task Run()
         {
             Console.WriteLine($"uuid{_ofs}name");
-            OktaClient.Groups.ListGroups().ForEach(grp =>
+            OktaClient.Groups.ListGroups().ForEachAsync(grp =>
             {
                 Console.WriteLine(grp.Profile.Name.Contains(_ofs)
                     ? $"{grp.Id}{_ofs}\"{grp.Profile.Name}\""
                     : $"{grp.Id}{_ofs}{grp.Profile.Name}");
-            });
+            }).RunSynchronously();
             
             return Task.CompletedTask;
         }

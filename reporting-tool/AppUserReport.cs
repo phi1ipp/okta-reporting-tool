@@ -67,7 +67,7 @@ namespace reporting_tool
             var appId = await OktaClient.Applications
                 .ListApplications(q: _appLabel)
                 .Select(app => app.Id)
-                .First();
+                .FirstAsync();
 
             if (appId == null)
             {

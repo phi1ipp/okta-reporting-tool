@@ -45,7 +45,7 @@ namespace reporting_tool
                         var lstGroups = await OktaClient.Users
                             .ListUserGroups(u.Id)
                             .Select(gr => gr.Profile.Name)
-                            .ToList();
+                            .ToListAsync();
 
                         return $"{u.Id} {string.Join(',', lstGroups)}";
                     }
