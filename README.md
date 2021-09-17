@@ -180,7 +180,7 @@ This action allows getting application user profile information, when `--action 
 
 ```
 --appLabel  <application label>
---action    <displan|delete>
+--action    <display|delete>
 --attrs     <list of application user profile attributes to display>
 --input     <filename for list of user IDs for which to do display/delete>
 ```
@@ -189,5 +189,5 @@ This action is to manage user lifecycle (activate, deactivate, delete) for all u
 
 ```
 --input  <file_name_with_usernames>
---action [activate,deactivate,suspend,unsuspend,delete]
+--action [activate,reactivate,activate_email,deactivate,suspend,unsuspend,delete]
 ```
