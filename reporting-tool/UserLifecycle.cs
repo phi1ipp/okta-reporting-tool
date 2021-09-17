@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
 
@@ -31,6 +32,8 @@ namespace reporting_tool
         /// </summary>
         public override Task Run()
         {
+            var semaphore = new SemaphoreSlim(16);
+            
             var lines = _fileInfo == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
@@ -40,9 +43,11 @@ namespace reporting_tool
                 {
                     var parts = line.Trim().Split(' ', ',');
                     var userName = parts[0];
-                    
+
                     try
                     {
+                        await semaphore.WaitAsync();
+
                         var user = await OktaClient.Users.GetUserAsync(userName);
 
                         switch (_action)
@@ -58,7 +63,7 @@ namespace reporting_tool
                                 break;
                             case "reactivate":
                                 await user.ReactivateAsync(sendEmail: false);
-                                Console.WriteLine($"{userName} activated");
+                                Console.WriteLine($"{userName} reactivated");
                                 break;
                             case "activate_email":
                                 await user.ActivateAsync(true);
@@ -79,7 +84,7 @@ namespace reporting_tool
                             case "delete":
                                 if (user.Status != UserStatus.Deprovisioned)
                                     await user.DeactivateAsync();
-                                
+
                                 await user.DeactivateOrDeleteAsync();
                                 Console.WriteLine($"{userName} deleted");
                                 break;
@@ -101,6 +106,10 @@ namespace reporting_tool
                     catch (Exception e)
                     {
                         Console.WriteLine(userName + " exception processing the user: " + e);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
                     }
                 });
 
