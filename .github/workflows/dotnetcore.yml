@@ -28,9 +28,9 @@ jobs:
             
     - uses: actions/checkout@v2
       with:
-        path: './tool' 
+        path: './reporting-tool' 
       
-    - run: cd tool/reporting-tool && dotnet add package Okta.Sdk -v 9.5.1 -s $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release --no-restore
+    - run: cd reporting-tool/reporting-tool && dotnet nuget add source $GITHUB_WORKSPACE/okta-sdk-dotnet/src/Okta.Sdk/bin/Release 
             && dotnet publish -c Release -r win10-x64 && cd bin/Release/net5.0/win10-x64/publish &&
             zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
             
