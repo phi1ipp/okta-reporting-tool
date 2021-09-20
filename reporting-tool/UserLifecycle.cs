@@ -30,10 +30,10 @@ namespace reporting_tool
         /// <summary>
         /// Main executable method to perform activation
         /// </summary>
-        public override Task Run()
+        public override async Task Run()
         {
             var semaphore = new SemaphoreSlim(16);
-            
+
             var lines = _fileInfo == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_fileInfo.FullName);
@@ -98,6 +98,10 @@ namespace reporting_tool
                         {
                             Console.WriteLine(userName + " !!!!! user not found");
                         }
+                        else if (e.Message.StartsWith("Activation failed because the user is already active"))
+                        {
+                            Console.WriteLine($"{userName} is already active");
+                        }
                         else
                         {
                             Console.WriteLine(userName + " exception processing the user: " + e);
@@ -113,7 +117,7 @@ namespace reporting_tool
                     }
                 });
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
     }
 }

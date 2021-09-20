@@ -20,7 +20,6 @@ namespace reporting_tool
 
             var config = configBuilder.Build();
 
-            var oktaConfig = new OktaConfig();
             return config.GetSection("Okta").Get<OktaConfig>();
             
         }
