@@ -88,15 +88,16 @@ namespace reporting_tool
             root.AddCommand(appAssignmentCmd);
 
             var appLifecycleCmd = new Command("appUserLifecycle",
-                handler: CommandHandler.Create<string, FileInfo, string, string, string>(async (appLabel, input,  action, attrs, ofs) =>
+                handler: CommandHandler.Create<string, FileInfo, string, string, bool, string>(async (appLabel, input,  action, attrs, all, ofs) =>
                 {
-                    await new AppUserLifecycle(oktaConfig, appLabel, input, action, attrs, ofs).Run();
+                    await new AppUserLifecycle(oktaConfig, appLabel, input, action, attrs, all, ofs).Run();
                 }));
             appLifecycleCmd.AddOption(optionOfs);
             appLifecycleCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
             appLifecycleCmd.AddOption(new Option("--action", "application label", new Argument<string>()));
             appLifecycleCmd.AddOption(optionAttrs);
             appLifecycleCmd.AddOption(optionInputFile);
+            appLifecycleCmd.AddOption(optionAll);
             root.AddCommand(appLifecycleCmd);
 
             var listGroups = new Command("listGroups",

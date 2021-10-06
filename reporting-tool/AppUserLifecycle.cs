@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,8 +20,9 @@ namespace reporting_tool
         private readonly IEnumerable<string> _attrs;
         private readonly string _ofs;
         private readonly FileInfo _input;
-        
+
         private Regex guidRegex = new Regex("^00.{15}297$");
+        private bool _all;
 
         /// <summary>
         /// Public constructor
@@ -30,14 +32,34 @@ namespace reporting_tool
         /// <param name="input">Input file with list of users</param>
         /// <param name="action">Add/remove user to the application</param>
         /// <param name="ofs">Output field separator</param>
-        public AppUserLifecycle(OktaConfig config, string appLabel, FileInfo input, string action, string attrs, string ofs = ",") :
+        public AppUserLifecycle(OktaConfig config, string appLabel, FileInfo input, string action, string attrs,
+            bool all = true, string ofs = ",") :
             base(config)
         {
             _ofs = ofs;
             _appLabel = appLabel;
             _action = action;
             _input = input;
-            _attrs = attrs.Split(",");
+            _attrs = attrs == null ? Enumerable.Empty<string>() : attrs.Split(",");
+            _all = all;
+
+            if (all)
+            {
+                if (input != null)
+                {
+                    Console.WriteLine("All records selected, ignoring --input");
+                }
+            }
+            else
+            {
+                _input = input;
+
+                if (input == null)
+                {
+                    Console.WriteLine(
+                        "Filtered user list selected but no --input provided, reading user list from standard input... (provide --all true otherwise)");
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -56,13 +78,23 @@ namespace reporting_tool
             {
                 throw new Exception($"Application {_appLabel} doesn't exist");
             }
-            
+
+            if (_all)
+            {
+                await OktaClient.Applications
+                    .ListApplicationUsers(appId)
+                    .ForEachAsync(appUser =>
+                        Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser))
+                    );
+                return;
+            }
+
             var lines = _input == null
                 ? Program.ReadConsoleLines()
                 : File.ReadLines(_input.FullName);
 
             var semaphor = new SemaphoreSlim(8);
-            
+
             var tasks = lines
                 .Select(async line =>
                 {
@@ -86,18 +118,19 @@ namespace reporting_tool
 
                         switch (_action)
                         {
-                            case "delete" :
+                            case "delete":
                                 await OktaClient.Applications.DeleteApplicationUserAsync(appId, userGuid);
                                 Console.WriteLine($"{userGuid} removed from {_appLabel}");
                                 break;
-                            
-                            case "display" :
+
+                            case "display":
                                 var appUser = await OktaClient.Applications
                                     .GetApplicationUserAsync(appId, userGuid);
 
-                                Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" + OutputAppProfile(appUser));
+                                Console.WriteLine($"{appUser.Id}{_ofs}{appUser.ExternalId}" +
+                                                  OutputAppProfile(appUser));
                                 break;
-                            
+
                             default:
                                 Console.WriteLine($"{_action} not supported");
                                 break;
@@ -121,13 +154,26 @@ namespace reporting_tool
 
             await Task.WhenAll(tasks);
         }
+
         private string OutputAppProfile(IAppUser appUser)
         {
             return appUser.Profile.GetData()
                 .Where(pair => _attrs.Contains(pair.Key) || !_attrs.Any())
                 .Aggregate("{}",
                     (s, pair) => s.Replace("}",
-                        pair.Value == null ? $",{pair.Key}:null}}" : $",{pair.Key}:{pair.Value}}}"));
+                        pair.Value == null
+                            ? $",{pair.Key}:null}}"
+                            : $",{pair.Key}:{JoinValueIfEnumerable(pair.Value)}}}"));
+        }
+
+        private static string JoinValueIfEnumerable(object val)
+        {
+            return val switch
+            {
+                null => "null",
+                ICollection<object> enumerable => string.Join(',', enumerable),
+                _ => val.ToString()
+            };
         }
     }
 }
