@@ -176,11 +176,11 @@ This report allows to find if users are assigned to an application specified by 
 --appLabel  <application label>
 ```
 ### appUserLifecycle
-This action allows getting application user profile information, when `--action display` or removing/unassigning of application user profile with `--action delete`
+This action allows getting application user profile information, when `--action display` or removing/unassigning of application user profile with `--action delete`. It also allows to do a basic user to app assignment with `--action assign` w/o specifying profile attributes though
 
 ```
 --appLabel  <application label>
---action    <display|delete>
+--action    <display|delete|assign>
 --attrs     <list of application user profile attributes to display>
 --input     <filename for list of user IDs for which to do display/delete>
 ```
