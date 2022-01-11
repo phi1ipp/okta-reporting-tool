@@ -118,6 +118,16 @@ namespace reporting_tool
 
                         switch (_action)
                         {
+                            case "assign":
+                                await OktaClient.Applications.AssignUserToApplicationAsync(
+                                    new AssignUserToApplicationOptions
+                                    {
+                                        ApplicationId = appId,
+                                        UserId = userGuid,
+                                    });
+                                Console.WriteLine($"{userGuid} assigned to {_appLabel}");
+                                break;
+                            
                             case "delete":
                                 await OktaClient.Applications.DeleteApplicationUserAsync(appId, userGuid);
                                 Console.WriteLine($"{userGuid} removed from {_appLabel}");
