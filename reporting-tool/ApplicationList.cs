@@ -31,9 +31,9 @@ namespace reporting_tool
         /// </summary>
         public override async Task Run()
         {
-            Console.WriteLine($"uuid,name,label");
+            Console.WriteLine($"uuid,name,label,status");
             await OktaClient.Applications.ListApplications().ForEachAsync(app => {
-                Console.WriteLine($"{app.Id}{_ofs}{app.Name}{_ofs}{app.Label}");
+                Console.WriteLine($"{app.Id}{_ofs}{app.Name}{_ofs}{app.Label}{_ofs}{app.Status}");
             });
         }
     }
