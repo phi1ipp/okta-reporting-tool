@@ -60,8 +60,8 @@ namespace reporting_tool
                                 rngCsp.GetBytes(bytes);
                                 var pwd = Convert.ToBase64String(bytes);
                                 user.Credentials.Password = new PasswordCredential {Value = pwd};
-                                Console.WriteLine($"{userName} set password to {pwd}");
                                 await user.UpdateAsync();
+                                Console.WriteLine($"{userName} set password to {pwd}");
                                 break;
                             case "set_pwd":
                                 user.Credentials.Password = new PasswordCredential {Value = parts[1]};
