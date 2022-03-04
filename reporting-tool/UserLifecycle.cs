@@ -33,7 +33,7 @@ namespace reporting_tool
         /// </summary>
         public override async Task Run()
         {
-            var rngCsp = new RNGCryptoServiceProvider();
+            var rngCsp = new PasswordGenerator (minimumLengthPassword: 8, minimumNumericChars: 1, minimumSpecialChars: 1);
             var bytes = new byte[12];
             
             var semaphore = new SemaphoreSlim(16);
@@ -57,8 +57,7 @@ namespace reporting_tool
                         switch (_action)
                         {
                             case "rnd_pwd":
-                                rngCsp.GetBytes(bytes);
-                                var pwd = Convert.ToBase64String(bytes);
+                                var pwd = rngCsp.Generate();
                                 user.Credentials.Password = new PasswordCredential {Value = pwd};
                                 await user.UpdateAsync();
                                 Console.WriteLine($"{userName} set password to {pwd}");
