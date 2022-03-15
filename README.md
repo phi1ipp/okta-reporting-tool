@@ -52,6 +52,7 @@ Some non-profile attributes supported as well:
 * id
 * status
 * created
+* lastLogin
 
 Also group name attribute can be included in the output for a user with `grp.Name` in case you want to get information about 
 user group membership, like `--search "not profile.SourceType pr" --attrs login,grp.Name`
