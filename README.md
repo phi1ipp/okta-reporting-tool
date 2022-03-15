@@ -122,9 +122,9 @@ It accepts the following switches:
 
 ### setAttribute
 This action is to set value(s) for a particular attribute(s) for given user(s). Each user can be assigned its own value, or all of the users 
-can be assigned the same value. Input may come from a standard input or a file, which structure should match the following:
+can be assigned the same value. Input may come from a standard input or a file, which structure should match the following (you only provide attribute values in the input, field names will come from a command line parameters:
 ```
-username1,attr1_value1[,"attr2 val2",...]
+username1,attr1_value1[,"attr2_val2",...]
 username2,attr1_value2[,attr2_val3,...]
 ```
 
@@ -134,8 +134,7 @@ Examples:
 * `./reporting-tool setAttribute --attrName LOA --attrValue "3" --input /tmp/loa` will set all users' LOA, whose usernames are listed in `/tmp/loa`, to "3"
 * `./reporting-tool setAttribute --attrName LOA --input /tmp/loa` will set all users' LOA to value listed in the second column in `/tmp/loa`
 * `./reporting-tool setAttribute --attrName firstName,lastName,LOA --input /tmp/values` will update several attributes for each user
-from the input file `/tmp/values`, which format matches the one from the command description. Attribute and value order is obviously significant. If a value does not
-include space or comma, you can skip double quotes around it.
+from the input file `/tmp/values`, which format matches the one from the command description. Attribute and value order is obviously significant. If a value does not include space or comma, you can skip double quotes around it.
 * `cut -f1 -d, /tmp/loa | ./reporting-tool setAttribute --attrName LOA --attrValue "3"` similar to the first example, just to demonstrate that the input 
 may be a standard input
 
