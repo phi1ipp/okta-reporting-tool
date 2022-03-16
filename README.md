@@ -189,5 +189,5 @@ This action is to manage user lifecycle (activate, deactivate, delete) for all u
 
 ```
 --input  <file_name_with_usernames>
---action [activate,reactivate,activate_email,deactivate,suspend,unsuspend,delete]
+--action [activate,reactivate,activate_email,reactivate_email,deactivate,suspend,unsuspend,delete]
 ```
