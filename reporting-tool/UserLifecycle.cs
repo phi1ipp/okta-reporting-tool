@@ -79,6 +79,10 @@ namespace reporting_tool
                                 await user.ActivateAsync(true);
                                 Console.WriteLine($"{userName} activated and email sent");
                                 break;
+                            case "reactivate_email":
+                                await user.ReactivateAsync(true);
+                                Console.WriteLine($"{userName} reactivated and email sent");
+                                break;
                             case "deactivate":
                                 await user.DeactivateAsync();
                                 Console.WriteLine($"{userName} deactivated");
@@ -111,6 +115,10 @@ namespace reporting_tool
                         else if (e.Message.StartsWith("Activation failed because the user is already active"))
                         {
                             Console.WriteLine($"{userName} is already active");
+                        }
+                        else if (e.Message.StartsWith("This operation is not allowed in the user's current status"))
+                        {
+                            Console.WriteLine($"{userName}: operation is not allowed for the user's current status");
                         }
                         else
                         {
