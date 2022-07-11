@@ -67,6 +67,10 @@ namespace reporting_tool
                                 Console.WriteLine($"{userName} set password to {parts[1]}");
                                 await user.UpdateAsync();
                                 break;
+                            case "exp_pwd":
+                                await user.ExpirePasswordAsync();
+                                Console.WriteLine($"{userName} password set to expired");
+                                break;
                             case "activate":
                                 await user.ActivateAsync(sendEmail: false);
                                 Console.WriteLine($"{userName} activated");
