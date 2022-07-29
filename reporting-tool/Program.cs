@@ -76,10 +76,11 @@ namespace reporting_tool
             root.AddCommand(eCommand);
 
             var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, string, FileInfo, bool, string>(async (appLabel, attrs, input, all, ofs) =>
-                {
-                    await new AppUserReport(oktaConfig, appLabel, attrs, input, all, ofs).Run();
-                }));
+                handler: CommandHandler.Create<string, string, FileInfo, bool, string>(
+                    async (appLabel, attrs, input, all, ofs) =>
+                    {
+                        await new AppUserReport(oktaConfig, appLabel, attrs, input, all, ofs).Run();
+                    }));
             appAssignmentCmd.AddOption(optionOfs);
             appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
             appAssignmentCmd.AddOption(optionAttrs);
@@ -88,10 +89,11 @@ namespace reporting_tool
             root.AddCommand(appAssignmentCmd);
 
             var appLifecycleCmd = new Command("appUserLifecycle",
-                handler: CommandHandler.Create<string, FileInfo, string, string, bool, string>(async (appLabel, input,  action, attrs, all, ofs) =>
-                {
-                    await new AppUserLifecycle(oktaConfig, appLabel, input, action, attrs, all, ofs).Run();
-                }));
+                handler: CommandHandler.Create<string, FileInfo, string, string, bool, string>(
+                    async (appLabel, input, action, attrs, all, ofs) =>
+                    {
+                        await new AppUserLifecycle(oktaConfig, appLabel, input, action, attrs, all, ofs).Run();
+                    }));
             appLifecycleCmd.AddOption(optionOfs);
             appLifecycleCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
             appLifecycleCmd.AddOption(new Option("--action", "application label", new Argument<string>()));
@@ -101,7 +103,7 @@ namespace reporting_tool
             root.AddCommand(appLifecycleCmd);
 
             var listGroups = new Command("listGroups",
-                handler: CommandHandler.Create<string>((ofs) => { new GroupList(oktaConfig, ofs).Run(); }));
+                handler: CommandHandler.Create<string>(async (ofs) => { await new GroupList(oktaConfig, ofs).Run(); }));
             listGroups.AddOption(optionOfs);
             root.AddCommand(listGroups);
 
@@ -132,7 +134,8 @@ namespace reporting_tool
                     await new UserLifecycle(oktaConfig, input, action).Run()));
             userLifeCycle.AddOption(optionOfs);
             userLifeCycle.AddOption(optionInputFile);
-            userLifeCycle.AddOption(new Option("--action", "activate, deactivate, suspend, unsuspend or delete", new Argument<string>()));
+            userLifeCycle.AddOption(new Option("--action", "activate, deactivate, suspend, unsuspend or delete",
+                new Argument<string>()));
             root.AddCommand(userLifeCycle);
 
             var manageGroups = new Command("manageMembership",
@@ -144,7 +147,8 @@ namespace reporting_tool
             manageGroups.AddOption(optionOfs);
             manageGroups.AddOption(optionGroupName);
             manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
-            manageGroups.AddOption(new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
+            manageGroups.AddOption(
+                new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
             root.AddCommand(manageGroups);
 
             var groupRename = new Command("groupRename",
@@ -153,10 +157,11 @@ namespace reporting_tool
                     await new GroupRename(oktaConfig, input, idUsed).Run();
                 }));
             groupRename.AddOption(optionInputFile);
-            groupRename.AddOption(new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
+            groupRename.AddOption(new Option("--idUsed", "true if group id used instead of name",
+                new Argument<bool>()));
             groupRename.AddOption(optionOfs);
             root.AddCommand(groupRename);
-            
+
             var injectedArgs = args.All(s => s != "-OFS")
                 ? args.Concat(new[] {"-OFS", ","}).ToArray()
                 : args;
