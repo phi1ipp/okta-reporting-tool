@@ -10,7 +10,7 @@ namespace reporting_tool
     public class GroupList : OktaAction
     {
         private readonly string _ofs;
-        
+
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -24,17 +24,18 @@ namespace reporting_tool
         /// <summary>
         /// The report entry point
         /// </summary>
-        public override Task Run()
+        public override async Task Run()
         {
-            Console.WriteLine($"uuid{_ofs}name");
-            OktaClient.Groups.ListGroups().ForEachAsync(grp =>
+            Console.WriteLine($"uuid{_ofs}type{_ofs}name");
+
+            await foreach (var grp in OktaClient.Groups.ListGroups())
             {
-                Console.WriteLine(grp.Profile.Name.Contains(_ofs)
-                    ? $"{grp.Id}{_ofs}\"{grp.Profile.Name}\""
-                    : $"{grp.Id}{_ofs}{grp.Profile.Name}");
-            }).RunSynchronously();
-            
-            return Task.CompletedTask;
+                var line = grp.Profile.Name.Contains(_ofs)
+                    ? $"{grp.Id}{_ofs}{grp.Type}{_ofs}\"{grp.Profile.Name}\""
+                    : $"{grp.Id}{_ofs}{grp.Type}{_ofs}{grp.Profile.Name}";
+                
+                Console.Out.WriteLine(line);
+            }
         }
     }
 }
