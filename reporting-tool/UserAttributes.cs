@@ -13,7 +13,7 @@ namespace reporting_tool
         /// Collection of non-profile attributes available for reporting and operations
         /// </summary>
         public static ICollection<string> NonProfileAttributes => new List<string>
-            {"status", "id", "created", "passwordChanged", "lastLogin", "provider", "transitioningToStatus"};
+            {"status", "id", "created", "passwordChanged", "lastLogin", "provider", "transitioningToStatus", "statusChanged"};
 
         /// <summary>
         /// Collection of group attributes which user is a member of
@@ -42,6 +42,7 @@ namespace reporting_tool
                 "created" => $"{user.Created:yyyy/MM/dd}",
                 "passwordChanged" => $"{user.PasswordChanged:yyyy/MM/dd}",
                 "lastLogin" => $"{user.LastLogin:yyyy/MM/dd}",
+                "statusChanged" => $"{user.StatusChanged:yyyy/MM/dd}",
                 "provider" => user.Credentials.Provider.Type.Value,
                 _ => ""
             };
