@@ -51,8 +51,12 @@ The tool uses Okta user profile attribute names where applicable:
 Some non-profile attributes supported as well:
 * id
 * status
+* transitioningToStatus
 * created
+* statusChanged
+* passwordChanged
 * lastLogin
+* provider
 
 Also group name attribute can be included in the output for a user with `grp.Name` in case you want to get information about 
 user group membership, like `--search "not profile.SourceType pr" --attrs login,grp.Name`
@@ -189,5 +193,5 @@ This action is to manage user lifecycle (activate, deactivate, delete) for all u
 
 ```
 --input  <file_name_with_usernames>
---action [activate,reactivate,activate_email,reactivate_email,deactivate,suspend,unsuspend,delete]
+--action [activate,reactivate,activate_email,reactivate_email,deactivate,suspend,unsuspend,delete,rnd_pwd,set_pwd,exp_pwd]
 ```
