@@ -20,7 +20,6 @@ namespace reporting_tool
         {
             _ofs = ofs;
         }
-
         /// <summary>
         /// The report entry point
         /// </summary>
@@ -28,14 +27,21 @@ namespace reporting_tool
         {
             Console.WriteLine($"uuid{_ofs}type{_ofs}name");
 
-            await foreach (var grp in OktaClient.Groups.ListGroups())
-            {
+            await OktaClient.Groups.ListGroups().ForEachAsync(grp => {
                 var line = grp.Profile.Name.Contains(_ofs)
                     ? $"{grp.Id}{_ofs}{grp.Type}{_ofs}\"{grp.Profile.Name}\""
                     : $"{grp.Id}{_ofs}{grp.Type}{_ofs}{grp.Profile.Name}";
-                
+
                 Console.Out.WriteLine(line);
-            }
+            });
+            // await foreach (var grp in OktaClient.Groups.ListGroups())
+            // {
+            //     var line = grp.Profile.Name.Contains(_ofs)
+            //         ? $"{grp.Id}{_ofs}{grp.Type}{_ofs}\"{grp.Profile.Name}\""
+            //         : $"{grp.Id}{_ofs}{grp.Type}{_ofs}{grp.Profile.Name}";
+                
+            //     Console.Out.WriteLine(line);
+            // }
         }
     }
 }
