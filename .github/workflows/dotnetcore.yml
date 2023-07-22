@@ -34,12 +34,12 @@ jobs:
       name: Add custom nuget
       working-directory: ./reporting-tool/reporting-tool
 
-    - run: dotnet publish -c Release -r win10-x64 && cd bin/Release/net5.0/win10-x64/publish &&
+    - run: dotnet publish -c Release -r win10-x64 && cd bin/Release/net6.0/win10-x64/publish &&
             zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
       working-directory: ./reporting-tool/reporting-tool
       name: Build Windows executables
             
-    - run: dotnet publish -c Release --os linux && cd bin/Release/net5.0/linux-x64/publish &&
+    - run: dotnet publish -c Release --os linux && cd bin/Release/net6.0/linux-x64/publish &&
             tar cf $GITHUB_WORKSPACE/reporting-tool-linux-x64.tar *
       working-directory: ./reporting-tool/reporting-tool
       name: Build Linux executables
