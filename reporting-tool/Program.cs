@@ -14,52 +14,67 @@ namespace reporting_tool
             var oktaConfig = OktaConfig.BuildConfig();
 
             var root = new RootCommand();
-            var optionOfs = new Option("-OFS", "output field separator", new Argument<string>());
+            var optionOfs = new Option<string>("-OFS", "output field separator");
             root.AddOption(optionOfs);
 
-            var optionAttrs = new Option("--attrs", "attributes to output", new Argument<string>());
-            var optionInputFile = new Option("--input", "input file name", new Argument<FileInfo>());
-            var optionGroupName = new Option("--grpName", "group name to run report for", new Argument<string>());
-            var optionSearch = new Option("--search", "search expression", new Argument<string>());
-            var optionFilter = new Option("--filter", "filter expression", new Argument<string>());
-            var optionAll = new Option("--all", "all records", new Argument<bool>());
+            var optionAttrs = new Option<string>("--attrs", "attributes to output");
+            var optionFilter = new Option<string>("--filter", "filter expression");
+            var optionGroupName = new Option<string>("--grpName", "group name to run report for");
+            var optionInputFile = new Option<FileInfo>("--input", "input file name");
+            var optionIdUsed = new Option<bool>("--idUsed", "true if group id used instead of name");
+            var optionSearch = new Option<string>("--search", "search expression");
+            var optionAll = new Option<bool>("--all", "all records");
 
-            var aCommand = new Command("findCreator",
-                handler: CommandHandler.Create<FileInfo, string, string>(
-                    async (input, attrs, ofs) => { await new CreatorReport(oktaConfig, input, attrs, ofs).Run(); }));
+            var aCommand = new Command("findCreator");
+            aCommand.SetHandler(
+                    async (input, attrs, ofs) => { 
+                        await new CreatorReport(oktaConfig, input, attrs, ofs).Run(); 
+                    }, optionInputFile, optionAttrs, optionOfs);
 
             aCommand.AddOption(optionInputFile);
             aCommand.AddOption(optionAttrs);
             aCommand.AddOption(optionOfs);
             root.AddCommand(aCommand);
 
-            var bCommand = new Command("setAttribute", handler: CommandHandler.Create<string, FileInfo, string, bool>(
-                async (attrName, input, attrValue, writeEmpty) =>
+            // setAttribute command
+            var optionAttrName = new Option<string>("--attrName", "profile attribute name to populate");
+            var optionAttrValue = new Option<string>("--attrValue", "profile attribute value to be set");
+            var optionWriteEmpty = new Option<bool>("--writeEmpty", "skip empty values");
+
+            var bCommand = new Command("setAttribute");
+
+            bCommand.SetHandler(
+                async ( input, attrName, attrValue, writeEmpty) =>
                 {
                     await new AttributeSetter(oktaConfig, input, attrName, attrValue, writeEmpty).Run();
-                }));
+                }, optionInputFile, optionAttrName, optionAttrValue, optionWriteEmpty);
 
-            bCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
-            bCommand.AddOption(new Option("--attrValue", "profile attribute value to be set", new Argument<string>()));
+            bCommand.AddOption(optionAttrName);
+            bCommand.AddOption(optionAttrValue);
             bCommand.AddOption(optionInputFile);
             bCommand.AddOption(optionOfs);
-            bCommand.AddOption(new Option("--writeEmpty", "skip empty values", new Argument<bool>()));
+            bCommand.AddOption(optionWriteEmpty);
             root.AddCommand(bCommand);
 
-            var cCommand = new Command("emptyAttribute", handler: CommandHandler.Create<string, string>(
-                async (attrName, since) => { await new EmptyAttributeReport(oktaConfig, attrName, since).Run(); }));
+            // emptyAttribute
+            var optionSince = new Option<string>("--since", "select users created since specified date (YYYY-MM-DD format)");
+            var cCommand = new Command("emptyAttribute");
+            cCommand.SetHandler(
+                async (attrName, since) => { 
+                    await new EmptyAttributeReport(oktaConfig, attrName, since).Run(); 
+                }, optionAttrName, optionSince);
 
-            cCommand.AddOption(new Option("--attrName", "profile attribute name to populate", new Argument<string>()));
-            cCommand.AddOption(new Option("--since", "select users created since specified date (YYYY-MM-DD format)",
-                new Argument<string>()));
+            cCommand.AddOption(optionAttrName);
+            cCommand.AddOption(optionSince);
             cCommand.AddOption(optionOfs);
             root.AddCommand(cCommand);
 
-            var groupMembershipWithFilter = new Command("groupMembership",
-                handler: CommandHandler.Create<string, string, string, FileInfo, string>(
+            // groupMembership
+            var groupMembershipWithFilter = new Command("groupMembership");
+            groupMembershipWithFilter.SetHandler(
                     (grpName, filter, attrs, input, ofs) =>
-                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs, input, ofs)
-                            .Run()));
+                        new GroupMembersReportWithUserFilter(oktaConfig, grpName, filter, attrs, input, ofs).Run(), 
+                        optionGroupName, optionFilter, optionAttrs, optionInputFile, optionOfs);
             groupMembershipWithFilter.AddOption(optionGroupName);
             groupMembershipWithFilter.AddOption(optionFilter);
             groupMembershipWithFilter.AddOption(optionAttrs);
@@ -67,98 +82,140 @@ namespace reporting_tool
             groupMembershipWithFilter.AddOption(optionInputFile);
             root.AddCommand(groupMembershipWithFilter);
 
-            var eCommand = new Command("listApps",
-                handler: CommandHandler.Create<string>(async ofs =>
+            // listApps
+            var eCommand = new Command("listApps");
+            eCommand.SetHandler(
+                async (ofs) =>
                 {
                     await new ApplicationList(oktaConfig, ofs).Run();
-                }));
+                }, optionOfs);
             eCommand.AddOption(optionOfs);
             root.AddCommand(eCommand);
 
-            var appAssignmentCmd = new Command("appUser",
-                handler: CommandHandler.Create<string, string, FileInfo, bool, string>(
+            // appUser
+            var optionAppLabel = new Option<string>("--appLabel", "application label");
+            var appAssignmentCmd = new Command("appUser");
+            appAssignmentCmd.SetHandler(
                     async (appLabel, attrs, input, all, ofs) =>
                     {
                         await new AppUserReport(oktaConfig, appLabel, attrs, input, all, ofs).Run();
-                    }));
+                    }, optionAppLabel, optionAttrs, optionInputFile, optionAll, optionOfs);
             appAssignmentCmd.AddOption(optionOfs);
-            appAssignmentCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
+            appAssignmentCmd.AddOption(optionAppLabel);
             appAssignmentCmd.AddOption(optionAttrs);
             appAssignmentCmd.AddOption(optionInputFile);
             appAssignmentCmd.AddOption(optionAll);
             root.AddCommand(appAssignmentCmd);
 
-            var appLifecycleCmd = new Command("appUserLifecycle",
-                handler: CommandHandler.Create<string, FileInfo, string, string, bool, string>(
+            // appUserLifecycle
+            var optionAction = new Option<string>("--action", "action");
+            var appLifecycleCmd = new Command("appUserLifecycle");
+            appLifecycleCmd.SetHandler(
                     async (appLabel, input, action, attrs, all, ofs) =>
                     {
                         await new AppUserLifecycle(oktaConfig, appLabel, input, action, attrs, all, ofs).Run();
-                    }));
+                    }, optionAppLabel, optionInputFile, optionAction, optionAttrs, optionAll, optionOfs);
             appLifecycleCmd.AddOption(optionOfs);
-            appLifecycleCmd.AddOption(new Option("--appLabel", "application label", new Argument<string>()));
-            appLifecycleCmd.AddOption(new Option("--action", "application label", new Argument<string>()));
+            appLifecycleCmd.AddOption(optionAppLabel);
+            appLifecycleCmd.AddOption(optionAction);
             appLifecycleCmd.AddOption(optionAttrs);
             appLifecycleCmd.AddOption(optionInputFile);
             appLifecycleCmd.AddOption(optionAll);
             root.AddCommand(appLifecycleCmd);
 
-            var listGroups = new Command("listGroups",
-                handler: CommandHandler.Create<string>(async (ofs) => { await new GroupList(oktaConfig, ofs).Run(); }));
+            // listGroups
+            var listGroups = new Command("listGroups");
+            listGroups.SetHandler(
+                async (ofs) => { 
+                    await new GroupList(oktaConfig, ofs).Run(); 
+                }, optionOfs);
             listGroups.AddOption(optionOfs);
             root.AddCommand(listGroups);
 
-            var fCommand = new Command("userReport",
-                handler: CommandHandler.Create<FileInfo, string, string>(async (input, attrName, attrs) =>
+            // createGroups
+            var createGroups = new Command("createGroups");
+            createGroups.SetHandler(
+                async (input, ofs) => { 
+                    await new GroupCreate(oktaConfig, input, ofs).Run(); 
+                }, optionInputFile, optionOfs);
+            createGroups.AddOption(optionInputFile);
+            createGroups.AddOption(optionOfs);
+            root.AddCommand(createGroups);
+
+            // deleteGroups
+            var deleteGroups = new Command("deleteGroups");
+            deleteGroups.SetHandler(
+                async (input, useIds, ofs) => { 
+                    await new GroupDelete(oktaConfig, input, useIds, ofs).Run(); 
+                }, optionInputFile, optionIdUsed, optionOfs);
+            deleteGroups.AddOption(optionInputFile);
+            deleteGroups.AddOption(optionIdUsed);
+            deleteGroups.AddOption(optionOfs);
+            root.AddCommand(deleteGroups);
+
+            // userReport
+            var optionAttrNameToCheck = new Option<string>("--attrName", "attribute name to check");
+            var fCommand = new Command("userReport");
+            fCommand.SetHandler(
+                async (input, attrName, attrs) =>
                 {
                     await new UserReport(oktaConfig, input, attrName, attrs).Run();
-                }));
+                }, optionInputFile, optionAttrs, optionAttrNameToCheck);
             fCommand.AddOption(optionInputFile);
             fCommand.AddOption(optionAttrs);
-            fCommand.AddOption(new Option("--attrName", "attribute name to check", new Argument<string>()));
+            fCommand.AddOption(optionAttrNameToCheck);
             fCommand.AddOption(optionOfs);
             root.AddCommand(fCommand);
 
-            var gCommand = new Command("userSearchReport",
-                handler: CommandHandler.Create<string, string, string, string>(async (search, filter, attrs, ofs) =>
+            // userSearchReport
+            var gCommand = new Command("userSearchReport");
+            gCommand.SetHandler(
+                async (search, filter, attrs, ofs) =>
                 {
                     await new UserSearchReport(oktaConfig, search, filter, attrs, ofs).Run();
-                }));
+                }, optionSearch, optionFilter, optionAttrs, optionOfs);
             gCommand.AddOption(optionSearch);
             gCommand.AddOption(optionFilter);
             gCommand.AddOption(optionAttrs);
-            gCommand.AddOption(root.FirstOrDefault(sym => sym.Name == "OFS") as Option);
+            gCommand.AddOption(optionOfs);
             root.AddCommand(gCommand);
 
-            var userLifeCycle = new Command("userLifecycle",
-                handler: CommandHandler.Create<FileInfo, string>(async (input, action) =>
-                    await new UserLifecycle(oktaConfig, input, action).Run()));
+            // userLifecycle
+            var optionUserLifecycleAction = new Option<string>("--action", "activate, deactivate, suspend, unsuspend or delete");
+            var userLifeCycle = new Command("userLifecycle");
+            userLifeCycle.SetHandler(
+                async (input, action) =>
+                    await new UserLifecycle(oktaConfig, input, action).Run(),
+                optionInputFile, optionUserLifecycleAction);
             userLifeCycle.AddOption(optionOfs);
             userLifeCycle.AddOption(optionInputFile);
-            userLifeCycle.AddOption(new Option("--action", "activate, deactivate, suspend, unsuspend or delete",
-                new Argument<string>()));
+            userLifeCycle.AddOption(optionUserLifecycleAction);
             root.AddCommand(userLifeCycle);
 
-            var manageGroups = new Command("manageMembership",
-                handler: CommandHandler.Create<FileInfo, string, string, bool>(async (input, action, grpName, idUsed) =>
+            // manageMembership
+            var optionManageMembershipAction = new Option<string>("--action", "[add | remove | display]");
+            var manageGroups = new Command("manageMembership");
+            manageGroups.SetHandler(
+                async (input, action, grpName, idUsed) =>
                 {
                     await new ManageMembership(oktaConfig, input, action, grpName, idUsed).Run();
-                }));
+                }, optionInputFile, optionManageMembershipAction, optionGroupName, optionIdUsed);
             manageGroups.AddOption(optionInputFile);
             manageGroups.AddOption(optionOfs);
             manageGroups.AddOption(optionGroupName);
-            manageGroups.AddOption(new Option("--action", "[add | remove | display]", new Argument<string>()));
-            manageGroups.AddOption(
-                new Option("--idUsed", "true if group id used instead of name", new Argument<bool>()));
+            manageGroups.AddOption(optionManageMembershipAction);
+            manageGroups.AddOption(optionIdUsed);
             root.AddCommand(manageGroups);
 
-            var groupRename = new Command("groupRename",
-                handler: CommandHandler.Create<FileInfo, bool>(async (input, idUsed) =>
+            // groupRename
+            var groupRename = new Command("groupRename");
+            groupRename.SetHandler(
+                async (input, idUsed) =>
                 {
                     await new GroupRename(oktaConfig, input, idUsed).Run();
-                }));
+                }, optionInputFile, optionIdUsed);
             groupRename.AddOption(optionInputFile);
-            groupRename.AddOption(new Option("--idUsed", "true if group id used instead of name",
-                new Argument<bool>()));
+            groupRename.AddOption(optionIdUsed);
             groupRename.AddOption(optionOfs);
             root.AddCommand(groupRename);
 

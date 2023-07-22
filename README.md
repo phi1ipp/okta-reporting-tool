@@ -19,13 +19,15 @@ Commands:
  appUser
  appUserLifecycle
  listGroups
+ createGroups
+ deleteGroups
  userReport
  userSearchReport
  userLifecycle
  manageMembership
 ```
 ### Configuration
-All the configuration is held in `appsettings.json` file, which includes the following section:
+All the configuration is held in `appsettings.json` file (create if missing), which should have the following section:
 ```
     ...,
     "Okta": {
@@ -168,6 +170,21 @@ The last switch given on the command line allows to assign the list of users to 
 
 ### listGroups
 It's a basic report to extract all groups from Okta with their UUID and name
+
+### createGroups
+This action takes the list of group names and descriptions and create them in Okta. Data may come either from a file or a standard input.
+```
+--input <file name with group names and descriptions separated by a comma (both parts can be wrapped in double quotes)>
+```
+`./reporting-tool createGroups --input /tmp/groups`
+
+### deleteGroups
+This action takes the list of group names or group ids and delete them
+```
+--input <file name with group names or group ids on each line>
+--idUsed - indicates that group Ids provided
+```
+`cut -f1 -d, /tmp/groups | ./reporting-tool deleteGroups --idUsed`
 
 ### listApps
 It's a basic report to extract all applications from Okta with their UUID, name and display name
