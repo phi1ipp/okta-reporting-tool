@@ -34,16 +34,6 @@ jobs:
       name: Add custom nuget
       working-directory: ./reporting-tool/reporting-tool
 
-    - run: dotnet publish -c Release -r win10-x64 && cd bin/Release/net7.0/win10-x64/publish &&
-            zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
-      working-directory: ./reporting-tool/reporting-tool
-      name: Build Windows executables
-            
-    - run: dotnet publish -c Release --os linux && cd bin/Release/net7.0/linux-x64/publish &&
-            tar cf $GITHUB_WORKSPACE/reporting-tool-linux-x64.tar *
-      working-directory: ./reporting-tool/reporting-tool
-      name: Build Linux executables
-
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1.0.0
@@ -55,24 +45,61 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload Win Release Asset
-      id: upload-win-release-asset 
+    - run: dotnet publish -c Release --os osx --arch arm64 && cd bin/Release/net7.0/osx-arm64/publish &&
+            zip $GITHUB_WORKSPACE/reporting-tool-osx-arm64.zip *
+      working-directory: ./reporting-tool/reporting-tool
+      name: Build MacOS arm64 executables
+
+    - name: Upload MacOS arm64 Release Asset
+      id: upload-osx-arm64-release-asset 
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./reporting-tool-win10-x64.zip
-        asset_name: reporting-tool-win10-x64.zip
+        asset_path: ./reporting-tool-osx-arm64.zip
+        asset_name: reporting-tool-osx-arm64.zip
         asset_content_type: application/zip
 
-    - name: Upload Linux Release Asset
-      id: upload-linux-release-asset 
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./reporting-tool-linux-x64.tar
-        asset_name: reporting-tool-linux-x64.tar
-        asset_content_type: application/x-tar
+
+  build-n-publish-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet publish -c Release --os linux && cd bin/Release/net7.0/linux-x64/publish &&
+              tar cf $GITHUB_WORKSPACE/reporting-tool-linux-x64.tar *
+        working-directory: ./reporting-tool/reporting-tool
+        name: Build Linux executables
+
+      - name: Upload Linux Release Asset
+        id: upload-linux-release-asset 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./reporting-tool-linux-x64.tar
+          asset_name: reporting-tool-linux-x64.tar
+          asset_content_type: application/x-tar
+
+          
+  build-n-publish-win:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet publish -c Release -r win10-x64 && cd bin/Release/net7.0/win10-x64/publish &&
+              zip $GITHUB_WORKSPACE/reporting-tool-win10-x64.zip *
+        working-directory: ./reporting-tool/reporting-tool
+        name: Build Windows executables
+            
+      - name: Upload Win Release Asset
+        id: upload-win-release-asset 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./reporting-tool-win10-x64.zip
+          asset_name: reporting-tool-win10-x64.zip
+          asset_content_type: application/zip
+
