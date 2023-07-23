@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>reporting_tool</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -14,7 +14,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
     <PackageReference Include="Okta.Sdk" Version="9.5.1" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <!-- <PackageReference Include="System.CommandLine.DragonFruit" Version="0.2.0-alpha.19174.3" /> -->
   </ItemGroup>
 
   <ItemGroup>
