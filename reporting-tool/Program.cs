@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 
@@ -145,9 +144,9 @@ namespace reporting_tool
             // deleteGroups
             var deleteGroups = new Command("deleteGroups");
             deleteGroups.SetHandler(
-                async (input, useIds, ofs) => { 
-                    await new GroupDelete(oktaConfig, input, useIds, ofs).Run(); 
-                }, optionInputFile, optionIdUsed, optionOfs);
+                async (input, useIds) => { 
+                    await new GroupDelete(oktaConfig, input, useIds).Run(); 
+                }, optionInputFile, optionIdUsed);
             deleteGroups.AddOption(optionInputFile);
             deleteGroups.AddOption(optionIdUsed);
             deleteGroups.AddOption(optionOfs);

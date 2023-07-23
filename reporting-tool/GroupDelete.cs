@@ -1,10 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Okta.Sdk;
 
 namespace reporting_tool
 {
@@ -13,7 +11,6 @@ namespace reporting_tool
     /// </summary>
     public class GroupDelete : OktaAction
     {
-        private readonly string _ofs;
         private readonly FileInfo _fileInfo;
         private readonly bool _groupIdUsed;
 
@@ -23,12 +20,10 @@ namespace reporting_tool
         /// <param name="config">OktaConfig instance</param>
         /// <param name="fileInfo">Input file info</param>
         /// <param name="groupIdUsed">true if group Id is used instead of group name</param>
-        /// <param name="ofs">Output field separator</param>
-        public GroupDelete(OktaConfig config, FileInfo fileInfo, bool groupIdUsed = false, string ofs = ",") : base(config)
+        public GroupDelete(OktaConfig config, FileInfo fileInfo, bool groupIdUsed = false) : base(config)
         {
             _fileInfo = fileInfo;
             _groupIdUsed = groupIdUsed;
-            _ofs = ofs;
         }
         /// <summary>
         /// The report entry point
