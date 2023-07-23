@@ -158,7 +158,7 @@ namespace reporting_tool
 
     internal class RandomSecureVersion
     {
-        private readonly RNGCryptoServiceProvider _rngProvider = new RNGCryptoServiceProvider();
+        private readonly RNGCryptoServiceProvider _rngProvider = new();
 
         private int Next()
         {

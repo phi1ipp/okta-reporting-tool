@@ -106,10 +106,10 @@ namespace reporting_tool
 
                     await semaphor.WaitAsync();
 
-                    string userGuid;
-                        
                     try
                     {
+                        string userGuid;
+                        
                         if (!guidRegex.IsMatch(userId))
                         {
                             var user = await OktaClient.Users.GetUserAsync(userId);

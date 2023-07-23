@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,8 +20,8 @@ namespace reporting_tool
         private readonly string _ofs;
         private readonly FileInfo _input;
 
-        private Regex guidRegex = new Regex("^00.{15}297$");
-        private bool _all;
+        private readonly Regex _guidRegex = new Regex("^00.{15}297$");
+        private readonly bool _all;
 
         /// <summary>
         /// Public constructor
@@ -31,7 +30,9 @@ namespace reporting_tool
         /// <param name="appLabel">Application label</param>
         /// <param name="input">Input file with list of users</param>
         /// <param name="action">Add/remove user to the application</param>
+        /// <param name="all">If true return all app users</param>
         /// <param name="ofs">Output field separator</param>
+        /// <param name="attrs">List of app attributes to return</param>
         public AppUserLifecycle(OktaConfig config, string appLabel, FileInfo input, string action, string attrs,
             bool all = true, string ofs = ",") :
             base(config)
@@ -40,7 +41,7 @@ namespace reporting_tool
             _appLabel = appLabel;
             _action = action;
             _input = input;
-            _attrs = attrs == null ? Enumerable.Empty<string>() : attrs.Split(",");
+            _attrs = attrs?.Split(",") ?? Enumerable.Empty<string>();
             _all = all;
 
             if (all)
@@ -102,11 +103,11 @@ namespace reporting_tool
 
                     await semaphor.WaitAsync();
 
-                    string userGuid;
-
                     try
                     {
-                        if (!guidRegex.IsMatch(userId))
+                        string userGuid;
+                        
+                        if (!_guidRegex.IsMatch(userId))
                         {
                             var user = await OktaClient.Users.GetUserAsync(userId);
                             userGuid = user.Id;

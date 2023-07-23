@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Okta.Sdk;
@@ -34,7 +33,6 @@ namespace reporting_tool
         public override async Task Run()
         {
             var rngCsp = new PasswordGenerator (minimumLengthPassword: 8, minimumNumericChars: 1, minimumSpecialChars: 1);
-            var bytes = new byte[12];
             
             var semaphore = new SemaphoreSlim(16);
 
@@ -80,7 +78,7 @@ namespace reporting_tool
                                 Console.WriteLine($"{userName} reactivated");
                                 break;
                             case "activate_email":
-                                await user.ActivateAsync(true);
+                                await user.ActivateAsync();
                                 Console.WriteLine($"{userName} activated and email sent");
                                 break;
                             case "reactivate_email":

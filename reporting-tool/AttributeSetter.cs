@@ -70,7 +70,7 @@ namespace reporting_tool
                     .ToDictionary(lst => lst.First(), lst => Regex.Split(lst.Last()) as IEnumerable<string>)
                 : lines
                     .Select(line => new List<string>(line.Trim().Split(new[] {' ', ','}, 2)))
-                    .ToDictionary(lst => lst.First(), lst => _attrValues);
+                    .ToDictionary(lst => lst.First(), _ => _attrValues);
 
             var semaphore = new SemaphoreSlim(16);
             var tasks =

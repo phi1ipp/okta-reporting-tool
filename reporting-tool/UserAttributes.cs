@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Okta.Sdk;
 
 namespace reporting_tool

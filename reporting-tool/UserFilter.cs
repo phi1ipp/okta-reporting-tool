@@ -27,7 +27,7 @@ namespace reporting_tool
         {
             if (string.IsNullOrEmpty(expression))
             {
-                F = user => true;
+                F = _ => true;
                 return;
             }
 
@@ -102,7 +102,7 @@ namespace reporting_tool
 
             return user =>
                 attrType == "profile"
-                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString().EndsWith(attrVal)
+                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString()!.EndsWith(attrVal)
                     : user.GetNonProfileAttribute(attrName).EndsWith(attrVal);
         }
 
@@ -114,7 +114,7 @@ namespace reporting_tool
 
             return user =>
                 attrType == "profile"
-                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString().StartsWith(attrVal)
+                    ? user.Profile[attrName] != null && user.Profile[attrName].ToString()!.StartsWith(attrVal)
                     : user.GetNonProfileAttribute(attrName).StartsWith(attrVal);
         }
 
@@ -136,7 +136,7 @@ namespace reporting_tool
                         }
                         else
                         {
-                            return user.Profile[attrName]?.ToString().Contains(attrVal) ?? false;
+                            return user.Profile[attrName]?.ToString()?.Contains(attrVal) ?? false;
                         }
                     };
                 default: return user => user.GetNonProfileAttribute(attrName).Contains(attrVal);
