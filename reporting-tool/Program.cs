@@ -159,7 +159,7 @@ namespace reporting_tool
                 async (input, attrName, attrs) =>
                 {
                     await new UserReport(oktaConfig, input, attrName, attrs).Run();
-                }, optionInputFile, optionAttrs, optionAttrNameToCheck);
+                }, optionInputFile, optionAttrNameToCheck, optionAttrs);
             fCommand.AddOption(optionInputFile);
             fCommand.AddOption(optionAttrs);
             fCommand.AddOption(optionAttrNameToCheck);
