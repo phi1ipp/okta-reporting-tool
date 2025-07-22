@@ -150,6 +150,7 @@ may be a standard input
 --attrValue <value_to_assign_to_all_given_users> (optional)
 --writeEmpty true (optional)
 ```
+Also you are able to provide a list of values for an array attribute, in which case the value in the input should have the following format `"(value1,value2[,...])"`
 
 ### manageMembership
 This action is to manage/report user's group membership in Okta. To add/remove group membership the input has to be formatted the 
